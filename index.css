@@ -1,0 +1,8 @@
+@import "tailwindcss";
+
+.bg-grid-pattern {
+  background-size: 40px 40px;
+  background-image: linear-gradient(to right, #e5e7eb 1px, transparent 1px),
+    linear-gradient(to bottom, #e5e7eb 1px, transparent 1px);
+  mask-image: radial-gradient(circle at center, black, transparent 80%);
+}

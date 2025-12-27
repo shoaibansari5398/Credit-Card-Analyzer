@@ -7,7 +7,9 @@ import os
 import requests
 import json
 import time
+import gc
 from dotenv import load_dotenv
+from security_utils import mask_transaction_pii
 
 load_dotenv(dotenv_path="../.env")
 
@@ -21,6 +23,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Health check endpoint for load balancers and monitoring
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for load balancer probes and monitoring."""
+    return {"status": "healthy", "timestamp": time.time()}
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
@@ -39,14 +47,13 @@ If the text contains no transactions, return an empty array.
 Output ONLY raw JSON. No markdown formatting.
 """
 
-# Extensive list of free/cheap models to rotate through
+# OpenRouter models to try
 MODELS = [
-    "deepseek/deepseek-r1-distill-llama-70b:free",
-    "meta-llama/llama-3.3-70b-instruct:free",
-    "qwen/qwen-2.5-72b-instruct:free",
     "google/gemini-2.0-flash-exp:free",
+    "google/gemini-2.0-flash-lite-preview-02-05:free",
     "google/gemini-2.0-pro-exp-02-05:free",
-    "microsoft/phi-3-medium-128k-instruct:free"
+    "deepseek/deepseek-r1-distill-llama-70b:free",
+    "meta-llama/llama-3.3-70b-instruct:free"
 ]
 
 @app.post("/analyze")
@@ -58,6 +65,9 @@ async def analyze_statement(
         raise HTTPException(status_code=500, detail="Missing Server API Key")
 
     try:
+        # Start performance timing
+        start_time = time.time()
+
         # 1. Read file into RAM
         file_bytes = await file.read()
         file_stream = io.BytesIO(file_bytes)
@@ -70,30 +80,29 @@ async def analyze_statement(
         if is_pdf:
             # Decrypt
             try:
-                # Ensure password is a string, even if None
                 pwd = password or ""
                 pdf = pikepdf.open(file_stream, password=pwd)
                 pdf.save(decrypted_stream)
                 pdf.close()
             except pikepdf.PasswordError:
-                 if password:
-                     trimmed = password.strip()
-                     try:
+                if password:
+                    trimmed = password.strip()
+                    try:
                         file_stream.seek(0)
                         pdf = pikepdf.open(file_stream, password=trimmed)
                         pdf.save(decrypted_stream)
                         pdf.close()
-                     except pikepdf.PasswordError:
-                         upper = trimmed.upper()
-                         try:
+                    except pikepdf.PasswordError:
+                        upper = trimmed.upper()
+                        try:
                             file_stream.seek(0)
                             pdf = pikepdf.open(file_stream, password=upper)
                             pdf.save(decrypted_stream)
                             pdf.close()
-                         except pikepdf.PasswordError:
-                             raise HTTPException(status_code=400, detail="Incorrect Password")
-                 else:
-                     raise HTTPException(status_code=400, detail="PDF is password protected")
+                        except pikepdf.PasswordError:
+                            raise HTTPException(status_code=400, detail="Incorrect Password")
+                else:
+                    raise HTTPException(status_code=400, detail="PDF is password protected")
 
             # Extract Text (pdfplumber)
             decrypted_stream.seek(0)
@@ -104,11 +113,9 @@ async def analyze_statement(
                         extracted_text += text + "\n"
 
             if len(extracted_text) < 50:
-                 raise HTTPException(status_code=400, detail="Could not extract text from PDF. It might be scanned/image-based.")
+                raise HTTPException(status_code=400, detail="Could not extract text from PDF. It might be scanned/image-based.")
 
         else:
-            # For non-PDFs provided as text/csv?
-            # Currently frontend only sends PDFs usually, but we can try generic decode
             extracted_text = file_bytes.decode('utf-8', errors='ignore')
 
         # 3. Call OpenRouter with Retry/Fallback
@@ -129,17 +136,11 @@ async def analyze_statement(
                         json={
                             "model": model,
                             "messages": [
-                                {
-                                    "role": "system",
-                                    "content": SYSTEM_PROMPT
-                                },
-                                {
-                                    "role": "user",
-                                    "content": f"Here is the bank statement text:\n\n{extracted_text[:30000]}" # Truncate to avoid context limits
-                                }
+                                {"role": "system", "content": SYSTEM_PROMPT},
+                                {"role": "user", "content": f"Here is the bank statement text:\n\n{extracted_text[:30000]}"}
                             ]
                         },
-                        timeout=60 # Extended timeout for slower models
+                        timeout=60
                     )
 
                     if response.status_code == 200:
@@ -156,15 +157,23 @@ async def analyze_statement(
 
                         # Clean potential non-json headers
                         if "[" in json_str:
-                             json_str = "[" + json_str.split("[", 1)[1]
+                            json_str = "[" + json_str.split("[", 1)[1]
                         if "]" in json_str:
-                             json_str = json_str.rsplit("]", 1)[0] + "]"
+                            json_str = json_str.rsplit("]", 1)[0] + "]"
 
-                        return json.loads(json_str)
+                        # Parse and apply PII masking
+                        transactions = json.loads(json_str)
+                        masked_transactions = mask_transaction_pii(transactions)
+
+                        # Log performance
+                        parse_duration = time.time() - start_time
+                        print(f"PDF parsing completed in {parse_duration:.2f}s")
+
+                        return masked_transactions
 
                     elif response.status_code == 429:
                         print(f"Rate limited on {model}. Waiting...")
-                        time.sleep(2)
+                        time.sleep(5)
                         last_error = f"Rate Limited: {response.text}"
                         continue
                     else:
@@ -182,7 +191,18 @@ async def analyze_statement(
         raise HTTPException(status_code=429, detail=f"All models failed. Last error: {last_error}")
 
     except pikepdf.PdfError as e:
-         raise HTTPException(status_code=400, detail=f"Invalid PDF: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Invalid PDF: {str(e)}")
     except Exception as e:
         print(f"Server Error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        # Ephemeral processing: explicit cleanup of sensitive data
+        if 'file_bytes' in dir():
+            del file_bytes
+        if 'file_stream' in dir():
+            del file_stream
+        if 'decrypted_stream' in dir():
+            del decrypted_stream
+        if 'extracted_text' in dir():
+            del extracted_text
+        gc.collect()

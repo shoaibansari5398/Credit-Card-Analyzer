@@ -6,6 +6,10 @@ import { SpendTreemap, WeeklyRadar, AnomalyScatter } from './charts/StandardChar
 import { CalendarHeatmap } from './charts/D3Charts';
 import { analyzeSpending } from '../services/geminiService';
 import ReactMarkdown from 'react-markdown';
+import { exportToCSV } from '../utils/exportUtils';
+
+// Currency symbol - change this for different regions (e.g., '₹', '€', '£')
+const CURRENCY_SYMBOL = '₹';
 
 interface DashboardProps {
   data: Transaction[];
@@ -18,13 +22,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onReset }) => {
 
   // --- STATS CALCULATION ---
   const stats: KPIStats = useMemo(() => {
-    const totalSpend = data.reduce((acc, curr) => acc + curr.amount, 0);
+    const totalSpend = data.reduce((acc, curr) => curr.amount > 0 ? acc + curr.amount : acc, 0);
     const sortedByAmt = [...data].sort((a, b) => b.amount - a.amount);
-    
+
     // Group by category
     const catMap = new Map<string, number>();
     data.forEach(t => catMap.set(t.category, (catMap.get(t.category) || 0) + t.amount));
-    
+
     let topCatName = '';
     let topCatVal = 0;
     catMap.forEach((val, key) => {
@@ -64,13 +68,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onReset }) => {
             <h1 className="text-xl font-bold text-gray-900 tracking-tight">Insight Analyzer</h1>
           </div>
           <div className="flex items-center gap-4">
-             <button 
+             <button
               onClick={onReset}
               className="text-sm font-medium text-gray-500 hover:text-gray-900"
             >
               Upload New
             </button>
-            <button 
+            <button
+              onClick={() => exportToCSV(data)}
               className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors shadow-sm"
             >
               Export Report
@@ -80,32 +85,32 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onReset }) => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
+
         {/* SECTION 1: AI INSIGHT & KPI */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-          
+
           {/* LEFT: KPIS */}
           <div className="lg:col-span-3 grid grid-cols-2 md:grid-cols-4 gap-4">
-            <KPICard 
-              label="Total Spend" 
-              value={`$${stats.totalSpend.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+            <KPICard
+              label="Total Spend"
+              value={`${CURRENCY_SYMBOL}${stats.totalSpend.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
               subValue="+12% vs last mo"
               trend="up"
             />
-             <KPICard 
-              label="Burn Rate / Day" 
-              value={`$${stats.burnRate.toFixed(0)}`}
+             <KPICard
+              label="Burn Rate / Day"
+              value={`${CURRENCY_SYMBOL}${stats.burnRate.toFixed(0)}`}
               subValue="High Velocity"
               trend="up"
             />
-             <KPICard 
-              label="Whale Tx" 
-              value={`$${stats.largestTx.amount.toFixed(0)}`}
+             <KPICard
+              label="Whale Tx"
+              value={`${CURRENCY_SYMBOL}${stats.largestTx.amount.toFixed(0)}`}
               subValue={stats.largestTx.merchant}
               trend="neutral"
             />
-             <KPICard 
-              label="Top Category" 
+             <KPICard
+              label="Top Category"
               value={`${stats.topCategory.percentage.toFixed(0)}%`}
               subValue={stats.topCategory.name}
               trend="down"
@@ -119,7 +124,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onReset }) => {
                 <h3 className="font-bold text-lg mb-1">Financial Copilot</h3>
                 <p className="text-indigo-100 text-sm mb-4">Get AI-driven insights on your spending patterns.</p>
               </div>
-              <button 
+              <button
                 onClick={handleAiAnalysis}
                 disabled={loadingAi}
                 className="w-full bg-white text-indigo-700 font-semibold py-2 px-4 rounded-lg text-sm hover:bg-indigo-50 transition-colors disabled:opacity-70 flex justify-center items-center"
@@ -157,7 +162,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onReset }) => {
           <Card title="Category Concentration" className="lg:col-span-2 min-h-[300px]">
             <SpendTreemap data={data} />
           </Card>
-          
+
           {/* SECONDARY: RADAR */}
           <Card title="Weekly Spending Habits" className="min-h-[300px]">
             <WeeklyRadar data={data} />

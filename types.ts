@@ -24,6 +24,7 @@ export interface CategoryNode {
 }
 
 export enum AppState {
+  LANDING = 'LANDING',
   UPLOAD = 'UPLOAD',
   PROCESSING = 'PROCESSING',
   DASHBOARD = 'DASHBOARD'

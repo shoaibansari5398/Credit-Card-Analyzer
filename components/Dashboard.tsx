@@ -1,17 +1,20 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Transaction, KPIStats } from '../types';
 import { Card, KPICard } from './ui/Card';
 import { TransactionTable } from './TransactionTable';
-import { SpendTreemap, WeeklyRadar, AnomalyScatter } from './charts/StandardCharts';
+import { WeeklyRadar } from './charts/StandardCharts';
 import { CalendarHeatmap } from './charts/D3Charts';
-import { SpendingSummary } from './SpendingSummary';
-import { SmartAnalytics } from './SmartAnalytics';
-import { SpendingXRay } from './SpendingXRay';
-import { BehaviorInsights } from './BehaviorInsights';
-import { RecurringPaymentFinder } from './RecurringPaymentFinder';
+
+// Core components (non-redundant)
+import { MonthlyTrendGraph } from './MonthlyTrendGraph';
+import { CategoryDistribution } from './CategoryDistribution';
+import { MerchantBreakdown } from './MerchantBreakdown';
+import { RiskLeakageDetection } from './RiskLeakageDetection';
+import { SavingSuggestions } from './SavingSuggestions';
 import { CategoryDeepDrill } from './CategoryDeepDrill';
 import { CreditUtilization } from './CreditUtilization';
-import { RiskLeakageDetection } from './RiskLeakageDetection';
+import { YearlySummary } from './YearlySummary';
+
 import { analyzeSpending } from '../services/geminiService';
 import ReactMarkdown from 'react-markdown';
 import { exportToCSV } from '../utils/exportUtils';
@@ -27,6 +30,7 @@ interface DashboardProps {
 export const Dashboard: React.FC<DashboardProps> = ({ data, onReset }) => {
   const [aiInsight, setAiInsight] = useState<string | null>(null);
   const [loadingAi, setLoadingAi] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   // --- STATS CALCULATION ---
   const stats: KPIStats = useMemo(() => {
@@ -46,9 +50,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onReset }) => {
         }
     });
 
+    // Calculate months for burn rate
+    const months = new Set(data.filter(t => t.amount > 0).map(t => t.date.substring(0, 7)));
+    const monthCount = months.size || 1;
+
     return {
       totalSpend,
-      burnRate: totalSpend / 30, // Approx for demo
+      burnRate: totalSpend / (monthCount * 30),
       largestTx: sortedByAmt[0],
       topCategory: {
         name: topCatName,
@@ -59,7 +67,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onReset }) => {
 
   const handleAiAnalysis = async () => {
     setLoadingAi(true);
-    // Send top 10 transactions for context
     const topTx = [...data].sort((a,b) => b.amount - a.amount).slice(0, 10);
     const result = await analyzeSpending(stats, topTx);
     setAiInsight(result);
@@ -67,7 +74,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onReset }) => {
   };
 
   return (
-    <div className="min-h-screen pb-20">
+    <div className="min-h-screen pb-20 bg-gray-50">
       {/* HEADER */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -84,7 +91,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onReset }) => {
             </button>
             <button
               onClick={() => exportToCSV(data)}
-              className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors shadow-sm"
+              className="bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-600 transition-colors shadow-sm"
             >
               Export Report
             </button>
@@ -94,25 +101,25 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onReset }) => {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-        {/* SECTION 1: AI INSIGHT & KPI */}
+        {/* ============================================ */}
+        {/* SECTION 1: STATS SUMMARY CARDS (Quick View) */}
+        {/* ============================================ */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-
-          {/* LEFT: KPIS */}
           <div className="lg:col-span-3 grid grid-cols-2 md:grid-cols-4 gap-4">
             <KPICard
               label="Total Spend"
               value={`${CURRENCY_SYMBOL}${stats.totalSpend.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
-              subValue="+12% vs last mo"
-              trend="up"
+              subValue="All transactions"
+              trend="neutral"
             />
              <KPICard
-              label="Burn Rate / Day"
+              label="Daily Average"
               value={`${CURRENCY_SYMBOL}${stats.burnRate.toFixed(0)}`}
-              subValue="High Velocity"
-              trend="up"
+              subValue="Per day spend"
+              trend="neutral"
             />
              <KPICard
-              label="Whale Tx"
+              label="Largest Transaction"
               value={`${CURRENCY_SYMBOL}${stats.largestTx.amount.toFixed(0)}`}
               subValue={stats.largestTx.merchant}
               trend="neutral"
@@ -121,24 +128,24 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onReset }) => {
               label="Top Category"
               value={`${stats.topCategory.percentage.toFixed(0)}%`}
               subValue={stats.topCategory.name}
-              trend="down"
+              trend="neutral"
             />
           </div>
 
-          {/* RIGHT: AI ACTION */}
+          {/* AI Copilot */}
           <div className="lg:col-span-1">
-            <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-xl p-5 text-white h-full flex flex-col justify-between shadow-lg">
+            <div className="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-xl p-5 text-white h-full flex flex-col justify-between shadow-lg">
               <div>
-                <h3 className="font-bold text-lg mb-1">Financial Copilot</h3>
-                <p className="text-indigo-100 text-sm mb-4">Get AI-driven insights on your spending patterns.</p>
+                <h3 className="font-bold text-lg mb-1">💡 AI Copilot</h3>
+                <p className="text-emerald-100 text-sm mb-4">Get AI-driven spending insights.</p>
               </div>
               <button
                 onClick={handleAiAnalysis}
                 disabled={loadingAi}
-                className="w-full bg-white text-indigo-700 font-semibold py-2 px-4 rounded-lg text-sm hover:bg-indigo-50 transition-colors disabled:opacity-70 flex justify-center items-center"
+                className="w-full bg-white text-emerald-700 font-semibold py-2 px-4 rounded-lg text-sm hover:bg-emerald-50 transition-colors disabled:opacity-70 flex justify-center items-center"
               >
                 {loadingAi ? (
-                  <span className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mr-2"></span>
+                  <span className="w-4 h-4 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mr-2"></span>
                 ) : (
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                 )}
@@ -148,13 +155,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onReset }) => {
           </div>
         </div>
 
-        {/* AI RESULT DRAWER (Conditional) */}
+        {/* AI RESULT DRAWER */}
         {aiInsight && (
-           <div className="mb-8 bg-white border border-indigo-100 rounded-xl p-6 shadow-sm ring-1 ring-indigo-50 relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-indigo-500 to-purple-500"></div>
+           <div className="mb-8 bg-white border border-emerald-100 rounded-xl p-6 shadow-sm ring-1 ring-emerald-50 relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-emerald-500 to-teal-500"></div>
               <div className="flex justify-between items-start mb-4">
                   <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                    <span className="text-xl">✨</span> Analysis Results
+                    <span className="text-xl">✨</span> AI Analysis Results
                   </h3>
                   <button onClick={() => setAiInsight(null)} className="text-gray-400 hover:text-gray-600">×</button>
               </div>
@@ -164,71 +171,90 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onReset }) => {
            </div>
         )}
 
-        {/* SECTION 1.5: SMART ANALYTICS */}
+        {/* ================================ */}
+        {/* SECTION 2: MONTHLY TREND GRAPH */}
+        {/* ================================ */}
         <div className="mb-8">
-          <SmartAnalytics data={data} />
+          <MonthlyTrendGraph data={data} />
         </div>
 
-        {/* SECTION 1.6: SPENDING X-RAY */}
-        <div className="mb-8">
-          <SpendingXRay data={data} />
+        {/* ============================================ */}
+        {/* SECTION 3 & 4: CATEGORY & MERCHANT (Side by Side) */}
+        {/* ============================================ */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <CategoryDistribution data={data} />
+          <MerchantBreakdown data={data} />
         </div>
 
-        {/* SECTION 1.7: BEHAVIOR INSIGHTS */}
-        <div className="mb-8">
-          <BehaviorInsights data={data} />
-        </div>
-
-        {/* SECTION 1.8: RECURRING PAYMENT FINDER */}
-        <div className="mb-8">
-          <RecurringPaymentFinder data={data} />
-        </div>
-
-        {/* SECTION 1.9: CATEGORY DEEP DRILL */}
-        <div className="mb-8">
-          <CategoryDeepDrill data={data} />
-        </div>
-
-        {/* SECTION 1.10: CREDIT UTILIZATION */}
-        <div className="mb-8">
-          <CreditUtilization data={data} />
-        </div>
-
-        {/* SECTION 1.11: RISK & LEAKAGE DETECTION */}
+        {/* ================================== */}
+        {/* SECTION 5: RISK & LEAKAGE DETECTION */}
+        {/* ================================== */}
         <div className="mb-8">
           <RiskLeakageDetection data={data} />
         </div>
 
-        {/* SECTION 2: CHARTS GRID */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 h-[500px] lg:h-[400px]">
-          {/* MAIN CHART: TREEMAP */}
-          <Card title="Category Concentration" className="lg:col-span-2 min-h-[300px]">
-            <SpendTreemap data={data} />
-          </Card>
-
-          {/* SECONDARY: RADAR */}
-          <Card title="Weekly Spending Habits" className="min-h-[300px]">
-            <WeeklyRadar data={data} />
-          </Card>
-        </div>
-
-        {/* SECTION 3: TIME & ANOMALIES */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-           <Card title="Spending Intensity (Heatmap)" className="h-64">
-              <CalendarHeatmap data={data} />
-           </Card>
-           <Card title="Anomaly Detection (Outliers)" className="h-64">
-              <AnomalyScatter data={data} />
-           </Card>
-        </div>
-
-        {/* SECTION 4: SPENDING SUMMARY */}
+        {/* ========================= */}
+        {/* SECTION 7: SAVING SUGGESTIONS */}
+        {/* ========================= */}
         <div className="mb-8">
-          <SpendingSummary data={data} />
+          <SavingSuggestions data={data} />
         </div>
 
-        {/* SECTION 5: DATA TABLE */}
-        <Card title="Transaction Ledger">
+        {/* ================================== */}
+        {/* SECTION 8: ADVANCED ANALYTICS (Expandable) */}
+        {/* ================================== */}
+        <div className="mb-8">
+          <button
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className="w-full bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">📊</span>
+              <div className="text-left">
+                <h3 className="font-bold text-gray-900">Advanced Analytics</h3>
+                <p className="text-sm text-gray-500">Deep drill into categories, credit utilization, and spending heatmaps</p>
+              </div>
+            </div>
+            <svg
+              className={`w-5 h-5 text-gray-400 transition-transform ${showAdvanced ? 'rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {showAdvanced && (
+            <div className="mt-4 space-y-8">
+              {/* Category Deep Drill */}
+              <CategoryDeepDrill data={data} />
+
+              {/* Credit Utilization */}
+              <CreditUtilization data={data} />
+
+              {/* Charts Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card title="Weekly Spending Habits" className="min-h-[300px]">
+                  <WeeklyRadar data={data} />
+                </Card>
+                <Card title="Spending Intensity (Heatmap)" className="min-h-[300px]">
+                  <CalendarHeatmap data={data} />
+                </Card>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ======================================== */}
+        {/* SECTION 9: YEARLY SUMMARY REPORT + EXPORT */}
+        {/* ======================================== */}
+        <div className="mb-8">
+          <YearlySummary data={data} />
+        </div>
+
+        {/* TRANSACTION LEDGER */}
+        <Card title="📋 Transaction Ledger">
             <div className="max-h-[512px] overflow-y-auto custom-scrollbar">
                 <TransactionTable transactions={data} />
             </div>

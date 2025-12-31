@@ -4,6 +4,14 @@ import { Card, KPICard } from './ui/Card';
 import { TransactionTable } from './TransactionTable';
 import { SpendTreemap, WeeklyRadar, AnomalyScatter } from './charts/StandardCharts';
 import { CalendarHeatmap } from './charts/D3Charts';
+import { SpendingSummary } from './SpendingSummary';
+import { SmartAnalytics } from './SmartAnalytics';
+import { SpendingXRay } from './SpendingXRay';
+import { BehaviorInsights } from './BehaviorInsights';
+import { RecurringPaymentFinder } from './RecurringPaymentFinder';
+import { CategoryDeepDrill } from './CategoryDeepDrill';
+import { CreditUtilization } from './CreditUtilization';
+import { RiskLeakageDetection } from './RiskLeakageDetection';
 import { analyzeSpending } from '../services/geminiService';
 import ReactMarkdown from 'react-markdown';
 import { exportToCSV } from '../utils/exportUtils';
@@ -64,7 +72,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onReset }) => {
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="bg-blue-600 text-white p-1.5 rounded-lg font-bold text-lg">CC</span>
+            <span className="bg-emerald-500 text-white p-1.5 rounded-lg font-bold text-lg">CC</span>
             <h1 className="text-xl font-bold text-gray-900 tracking-tight">Insight Analyzer</h1>
           </div>
           <div className="flex items-center gap-4">
@@ -156,6 +164,41 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onReset }) => {
            </div>
         )}
 
+        {/* SECTION 1.5: SMART ANALYTICS */}
+        <div className="mb-8">
+          <SmartAnalytics data={data} />
+        </div>
+
+        {/* SECTION 1.6: SPENDING X-RAY */}
+        <div className="mb-8">
+          <SpendingXRay data={data} />
+        </div>
+
+        {/* SECTION 1.7: BEHAVIOR INSIGHTS */}
+        <div className="mb-8">
+          <BehaviorInsights data={data} />
+        </div>
+
+        {/* SECTION 1.8: RECURRING PAYMENT FINDER */}
+        <div className="mb-8">
+          <RecurringPaymentFinder data={data} />
+        </div>
+
+        {/* SECTION 1.9: CATEGORY DEEP DRILL */}
+        <div className="mb-8">
+          <CategoryDeepDrill data={data} />
+        </div>
+
+        {/* SECTION 1.10: CREDIT UTILIZATION */}
+        <div className="mb-8">
+          <CreditUtilization data={data} />
+        </div>
+
+        {/* SECTION 1.11: RISK & LEAKAGE DETECTION */}
+        <div className="mb-8">
+          <RiskLeakageDetection data={data} />
+        </div>
+
         {/* SECTION 2: CHARTS GRID */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 h-[500px] lg:h-[400px]">
           {/* MAIN CHART: TREEMAP */}
@@ -179,9 +222,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onReset }) => {
            </Card>
         </div>
 
-        {/* SECTION 4: DATA TABLE */}
+        {/* SECTION 4: SPENDING SUMMARY */}
+        <div className="mb-8">
+          <SpendingSummary data={data} />
+        </div>
+
+        {/* SECTION 5: DATA TABLE */}
         <Card title="Transaction Ledger">
-            <div className="max-h-96 overflow-y-auto custom-scrollbar">
+            <div className="max-h-[512px] overflow-y-auto custom-scrollbar">
                 <TransactionTable transactions={data} />
             </div>
         </Card>

@@ -28,6 +28,40 @@ def mask_account_numbers(text: str) -> str:
     return text
 
 
+def scrub_sensitive_data(text: str) -> str:
+    """
+    Scrub PII from raw text before sending to AI.
+    - Replaces 12-16 digit numbers (cards/accounts) with [REDACTED_NUMBER]
+    - Replaces emails with [REDACTED_EMAIL]
+    """
+    if not text:
+        return ""
+
+    # 1. Email Addresses
+    email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+    text = re.sub(email_pattern, '[REDACTED_EMAIL]', text)
+
+    # 2. Credit Card / Account Numbers (13-19 digits, allowing for spaces/dashes)
+    # Be careful not to match dates like 2024-01-01 (which has 8 digits)
+    # We target longer sequences.
+    cc_pattern = r'\b(?:\d[ -]*){13,19}\b'
+
+    def param_replacer(match):
+        original = match.group(0)
+        # Check if it looks like a date (ISO)
+        if re.match(r'^\d{4}-\d{2}-\d{2}$', original):
+            return original
+        # If it's just a long number, redact it
+        digits = re.sub(r'\D', '', original)
+        if len(digits) >= 12:
+            return f"[REDACTED_NUM_{digits[-4:]}]"
+        return original
+
+    text = re.sub(cc_pattern, param_replacer, text)
+
+    return text
+
+
 def mask_transaction_pii(transactions: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """
     Apply PII masking to a list of transaction dictionaries.

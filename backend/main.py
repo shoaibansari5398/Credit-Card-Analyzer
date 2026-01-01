@@ -13,7 +13,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from pydantic import BaseModel, EmailStr, ValidationError
 from dotenv import load_dotenv
-from security_utils import mask_transaction_pii
+from security_utils import mask_transaction_pii, scrub_sensitive_data
 
 # Sanitize helper
 def sanitize_text(text: str) -> str:
@@ -27,9 +27,12 @@ load_dotenv(dotenv_path="../.env")
 app = FastAPI()
 
 # Configure CORS
+# Configure CORS
+ALLOWED_ORIGINS = json.loads(os.getenv("ALLOWED_ORIGINS", '["http://localhost:5173", "http://localhost:8000"]'))
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -70,6 +73,7 @@ async def contact_support(request: ContactRequest):
     # 1. Check if SMTP is configured
     if not SMTP_USERNAME or not SMTP_PASSWORD:
         print("SMTP credentials not found. simulating email send.")
+        # REDACTED LOGGING
         print(f"Would send email to {RECIPIENT_EMAIL} from {safe_email} about {safe_category}")
         return {"status": "success", "message": "Support request received (Simulation)"}
 
@@ -196,6 +200,11 @@ async def analyze_statement(
     try:
         start_time = time.time()
 
+        # 0. Validate File Size (Max 10MB) - Prevent DoS
+        MAX_FILE_SIZE = 10 * 1024 * 1024 # 10MB
+        if file.size and file.size > MAX_FILE_SIZE:
+             raise HTTPException(status_code=413, detail="File too large. Maximum size is 10MB.")
+
         # 1. Read file into RAM
         file_bytes = await file.read()
         file_stream = io.BytesIO(file_bytes)
@@ -244,8 +253,11 @@ async def analyze_statement(
         else:
             extracted_text = file_bytes.decode('utf-8', errors='ignore')
 
-        # 3. Call Groq API
-        content = call_groq(extracted_text)
+        # 3. Pre-Process & Scrub PII
+        scrubbed_text = scrub_sensitive_data(extracted_text)
+
+        # 4. Call Groq API
+        content = call_groq(scrubbed_text)
 
         if not content:
             raise HTTPException(status_code=500, detail="Groq API failed. Please check your API key and try again.")

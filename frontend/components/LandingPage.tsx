@@ -36,16 +36,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onUseDem
             <ThemeToggle />
             <button
                 onClick={() => setIsContactModalOpen(true)}
-                className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+                className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
             >
                 Contact Us
             </button>
-            <button onClick={onUseDemo} className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">
+            <button onClick={onUseDemo} className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer">
                 Demo
             </button>
             <button
                 onClick={onGetStarted}
-                className="bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold py-2.5 px-5 rounded-lg transition-all shadow-sm hover:shadow-md"
+                className="bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold py-2.5 px-5 rounded-lg transition-all shadow-sm hover:shadow-md cursor-pointer"
             >
                 Get Started
             </button>

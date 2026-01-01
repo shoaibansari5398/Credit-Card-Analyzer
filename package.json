@@ -1,45 +1,16 @@
 {
-  "name": "credit-card-insight-analyzer",
+  "name": "credit-card-insight-analyzer-root",
   "private": true,
   "version": "0.0.0",
-  "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently -n \"frontend,backend\" -c \"cyan,magenta\" \"npm run dev --prefix frontend\" \"npm run dev:backend\"",
+    "dev:all": "npm run dev",
     "dev:backend": "cd backend && ../venv/bin/uvicorn main:app --reload",
-    "dev:all": "concurrently -n \"frontend,backend\" -c \"cyan,magenta\" \"npm run dev\" \"npm run dev:backend\"",
-    "build": "vite build",
-    "preview": "vite preview",
-    "test": "npm run test:frontend && npm run test:backend",
-    "test:frontend": "vitest run",
+    "install:all": "npm install --prefix frontend && pip install -r backend/requirements.txt",
+    "test": "npm run test --prefix frontend && npm run test:backend",
     "test:backend": "cd backend && ../venv/bin/python -m pytest tests"
   },
-  "dependencies": {
-    "d3": "^7.9.0",
-    "groq-sdk": "^0.37.0",
-    "motion": "^12.23.26",
-    "pdf-lib": "^1.17.1",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
-    "react-markdown": "^10.1.0",
-    "react-router-dom": "^7.11.0",
-    "recharts": "^3.6.0"
-  },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.1.18",
-    "@testing-library/dom": "^10.4.1",
-    "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^16.3.1",
-    "@types/node": "^22.14.0",
-    "@types/react": "^19.2.7",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^5.0.0",
-    "autoprefixer": "^10.4.23",
-    "concurrently": "^9.2.1",
-    "jsdom": "^27.4.0",
-    "postcss": "^8.5.6",
-    "tailwindcss": "^4.1.18",
-    "typescript": "~5.8.2",
-    "vite": "^6.2.0",
-    "vitest": "^4.0.16"
+    "concurrently": "^8.0.0"
   }
 }

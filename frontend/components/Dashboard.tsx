@@ -93,13 +93,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onReset }) => {
              <ThemeToggle />
              <button
               onClick={onReset}
-              className="text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+              className="text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
             >
               Upload New
             </button>
             <button
               onClick={() => exportToCSV(data)}
-              className="bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-600 transition-colors shadow-sm"
+              className="bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-600 transition-colors shadow-sm cursor-pointer"
             >
               Export Report
             </button>
@@ -150,7 +150,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onReset }) => {
               <button
                 onClick={handleAiAnalysis}
                 disabled={loadingAi}
-                className="w-full bg-white text-emerald-700 font-semibold py-2 px-4 rounded-lg text-sm hover:bg-emerald-50 transition-colors disabled:opacity-70 flex justify-center items-center"
+                className="w-full bg-white text-emerald-700 font-semibold py-2 px-4 rounded-lg text-sm hover:bg-emerald-50 transition-colors disabled:opacity-70 flex justify-center items-center cursor-pointer"
               >
                 {loadingAi ? (
                   <span className="w-4 h-4 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mr-2"></span>
@@ -171,7 +171,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onReset }) => {
                    <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
                      <span className="text-xl">✨</span> AI Analysis Results
                    </h3>
-                   <button onClick={() => setAiInsight(null)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">×</button>
+                   <button onClick={() => setAiInsight(null)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer">×</button>
                </div>
                <div className="prose prose-sm max-w-none text-gray-600 dark:text-gray-300 prose-headings:font-bold prose-headings:text-gray-800 dark:prose-headings:text-gray-100 prose-strong:text-gray-800 dark:prose-strong:text-gray-100">
                  <ReactMarkdown>{aiInsight}</ReactMarkdown>
@@ -214,7 +214,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onReset }) => {
         <div className="mb-8">
             <button
             onClick={() => setShowAdvanced(!showAdvanced)}
-            className="w-full bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            className="w-full bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-3">
               <span className="text-2xl">📊</span>

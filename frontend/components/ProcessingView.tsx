@@ -10,9 +10,9 @@ interface ProcessingViewProps {
 
 export const ProcessingView: React.FC<ProcessingViewProps> = ({ progress }) => {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-      <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-emerald-500 mb-4"></div>
-      <p className="text-xl font-medium text-gray-700 dark:text-gray-300">Analyzing your finances...</p>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200" role="status" aria-live="polite">
+      <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-emerald-500 mb-4" role="status" aria-label="Loading"></div>
+      <p className="text-xl font-medium text-gray-700 dark:text-gray-300" aria-live="polite">Analyzing your finances...</p>
       {progress.total > 0 && (
         <div className="mt-4 text-center">
           <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400">
@@ -24,7 +24,12 @@ export const ProcessingView: React.FC<ProcessingViewProps> = ({ progress }) => {
           <div className="w-64 h-2 bg-gray-200 dark:bg-gray-700 rounded-full mt-3 overflow-hidden">
             <div
               className="h-full bg-emerald-500 transition-all duration-300"
-              style={{ width: `${(progress.current / progress.total) * 100}%` }}
+              style={{ width: `${Math.min((progress.current / progress.total) * 100, 100)}%` }}
+              role="progressbar"
+              aria-valuenow={progress.current}
+              aria-valuemin={0}
+              aria-valuemax={progress.total}
+              aria-label={`Processing file ${progress.current} of ${progress.total}`}
             />
           </div>
         </div>

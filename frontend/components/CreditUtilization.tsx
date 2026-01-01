@@ -59,7 +59,7 @@ export const CreditUtilization: React.FC<CreditUtilizationProps> = ({ data, cred
       .map(([month, spend]): MonthlyUtilization => {
         const [year, mon] = month.split('-');
         const date = new Date(parseInt(year), parseInt(mon) - 1);
-        const utilization = (spend / creditLimit) * 100;
+        const utilization = creditLimit > 0 ? (spend / creditLimit) * 100 : 0;
         return {
           month,
           monthLabel: date.toLocaleDateString(undefined, { month: 'short', year: '2-digit' }),

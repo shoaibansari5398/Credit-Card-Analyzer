@@ -80,7 +80,7 @@ export const SavingSuggestions: React.FC<SavingSuggestionsProps> = ({ data }) =>
       if (data.count >= 2) {
         const avgAmount = data.total / data.count;
         // Check amount consistency (variance < 15%)
-        const isAmountConsistent = data.amounts.every(a => Math.abs(a - avgAmount) / avgAmount < 0.15);
+        const isAmountConsistent = avgAmount > 0 && data.amounts.every(a => Math.abs(a - avgAmount) / avgAmount < 0.15);
 
         // Check temporal consistency if we have enough dates
         let isTimeConsistent = false;

@@ -8,10 +8,16 @@ export const parseStatementFile = async (file: File, password?: string): Promise
   }
 
   try {
-    const response = await fetch("http://localhost:8000/analyze", {
+    const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
+    const response = await fetch(`${apiBaseUrl}/analyze`, {
       method: "POST",
       body: formData,
+      signal: controller.signal,
     });
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({ detail: response.statusText }));
@@ -19,14 +25,14 @@ export const parseStatementFile = async (file: File, password?: string): Promise
     }
 
     const rawData = await response.json();
-
-    if (!Array.isArray(rawData)) {
-        console.warn("Parsed data is not an array:", rawData);
-        return [];
-    }
-
     return rawData.map((item: any, index: number) => ({
       id: `parsed-tx-${index}-${Date.now()}`,
+      date: item.date || new Date().toISOString(),
+      merchant: item.merchant || 'Unknown',
+      amount: Number(item.amount) || 0,
+      category: item.category || 'Uncategorized',
+      isRecurring: !!item.isRecurring
+    })).filter(tx => tx.date && tx.merchant && !isNaN(tx.amount));
       date: item.date,
       merchant: item.merchant,
       amount: Number(item.amount),

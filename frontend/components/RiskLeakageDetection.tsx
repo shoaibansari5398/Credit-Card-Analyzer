@@ -34,7 +34,7 @@ export const RiskLeakageDetection: React.FC<RiskLeakageDetectionProps> = ({ data
     // 1. Duplicate Charges Detection
     const txByKey = new Map<string, Transaction[]>();
     debits.forEach(t => {
-      // Key: same merchant + same amount + same date or within 1 day
+      // Key: same merchant + same amount (dates checked separately)
       const key = `${t.merchant.toLowerCase()}_${t.amount.toFixed(2)}`;
       const existing = txByKey.get(key) || [];
       existing.push(t);
@@ -45,9 +45,9 @@ export const RiskLeakageDetection: React.FC<RiskLeakageDetectionProps> = ({ data
       if (transactions.length >= 2) {
         // Check if they're on the same day or consecutive days
         const dates = transactions.map(t => new Date(t.date).getTime()).sort();
-        const samePeriod = dates.every((d, i) =>
-          i === 0 || (d - dates[i-1]) <= 2 * 24 * 60 * 60 * 1000 // within 2 days
-        );
+        const minDate = dates[0];
+        const maxDate = dates[dates.length - 1];
+        const samePeriod = (maxDate - minDate) <= 2 * 24 * 60 * 60 * 1000; // all within 2 days
 
         if (samePeriod) {
           const totalAmount = transactions.reduce((acc, t) => acc + t.amount, 0);

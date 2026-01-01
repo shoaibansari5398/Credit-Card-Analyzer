@@ -1049,22 +1049,60 @@ function SplashCursor({
     // The original code used a named function 'handleFirstMouseMove' which removes itself.
     // That part is fine as is, but we need to ensure the main listeners are cleanable.
 
-    document.body.addEventListener('mousemove', function handleFirstMouseMove(e) {
+    const handleFirstMouseMove = (e: MouseEvent) => {
       let pointer = pointers[0];
       let posX = scaleByPixelRatio(e.clientX);
       let posY = scaleByPixelRatio(e.clientY);
       let color = generateColor();
-      updateFrame(); // This might start the loop if not started, but we call updateFrame() at end anyway
+      updateFrame();
       updatePointerMoveData(pointer, posX, posY, color);
       document.body.removeEventListener('mousemove', handleFirstMouseMove);
-    });
+    };
+
+    document.body.addEventListener('mousemove', handleFirstMouseMove);
 
     return () => {
+      // Clean up WebGL resources
+      if (dye) {
+        gl.deleteTexture(dye.read.texture);
+        gl.deleteFramebuffer(dye.read.fbo);
+        gl.deleteTexture(dye.write.texture);
+        gl.deleteFramebuffer(dye.write.fbo);
+      }
+      if (velocity) {
+        gl.deleteTexture(velocity.read.texture);
+        gl.deleteFramebuffer(velocity.read.fbo);
+        gl.deleteTexture(velocity.write.texture);
+        gl.deleteFramebuffer(velocity.write.fbo);
+      }
+      if (divergence) {
+        gl.deleteTexture(divergence.texture);
+        gl.deleteFramebuffer(divergence.fbo);
+      }
+      if (curl) {
+        gl.deleteTexture(curl.texture);
+        gl.deleteFramebuffer(curl.fbo);
+      }
+      if (pressure) {
+        gl.deleteTexture(pressure.read.texture);
+        gl.deleteFramebuffer(pressure.read.fbo);
+        gl.deleteTexture(pressure.write.texture);
+        gl.deleteFramebuffer(pressure.write.fbo);
+      }
+      // Delete programs
+      [copyProgram, clearProgram, splatProgram, advectionProgram,
+       divergenceProgram, curlProgram, vorticityProgram, pressureProgram,
+       gradienSubtractProgram].forEach(prog => {
+        if (prog && prog.program) gl.deleteProgram(prog.program);
+      });
+
       window.removeEventListener('mousedown', onMouseDown);
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('touchstart', onTouchStart);
       window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchmove', onTouchMove);
       window.removeEventListener('touchend', onTouchEnd);
+      document.body.removeEventListener('mousemove', handleFirstMouseMove);
       cancelAnimationFrame(updateFrameId);
     };
   }, [

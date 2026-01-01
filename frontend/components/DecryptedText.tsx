@@ -105,7 +105,7 @@ export default function DecryptedText({
       }
     };
 
-    const iterationRef = useRef(0);
+
 
     if (isHovering) {
       setIsScrambling(true);

@@ -51,7 +51,7 @@ export const BehaviorInsights: React.FC<BehaviorInsightsProps> = ({ data }) => {
     const weekendAvg = weekendTotal / 2; // 2 weekend days
     const weekdayAvg = weekdayTotal / 5; // 5 weekdays
 
-    if (weekendAvg > weekdayAvg * 1.3) {
+    if (weekdayAvg > 0 && weekendAvg > weekdayAvg * 1.3) {
       const pctMore = ((weekendAvg / weekdayAvg - 1) * 100).toFixed(0);
       results.push({
         id: 'weekend-spender',
@@ -61,7 +61,7 @@ export const BehaviorInsights: React.FC<BehaviorInsightsProps> = ({ data }) => {
         detail: `Weekend avg: ${CURRENCY_SYMBOL}${weekendAvg.toLocaleString(undefined, { maximumFractionDigits: 0 })}/day vs Weekday: ${CURRENCY_SYMBOL}${weekdayAvg.toLocaleString(undefined, { maximumFractionDigits: 0 })}/day`,
         type: 'info'
       });
-    } else if (weekdayAvg > weekendAvg * 1.3) {
+    } else if (weekendAvg > 0 && weekdayAvg > weekendAvg * 1.3) {
       results.push({
         id: 'weekday-spender',
         icon: '💼',

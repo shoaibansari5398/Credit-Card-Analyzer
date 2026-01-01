@@ -91,14 +91,17 @@ export const SpendingXRay: React.FC<SpendingXRayProps> = ({ data }) => {
     const total = expenses.reduce((acc, t) => acc + t.amount, 0);
 
     return Array.from(catMap.entries())
-      .map(([name, amount], i): CategoryData => ({
+      .map(([name, amount]): Omit<CategoryData, 'color'> => ({
         name,
         amount,
         percentage: (amount / total) * 100,
-        color: CATEGORY_COLORS[i % CATEGORY_COLORS.length]
       }))
       .sort((a, b) => b.amount - a.amount)
-      .slice(0, 5);
+      .slice(0, 5)
+      .map((cat, i) => ({
+        ...cat,
+        color: CATEGORY_COLORS[i % CATEGORY_COLORS.length]
+      }));
   }, [expenses]);
 
   // 4. Top 10 Merchants
@@ -362,23 +365,10 @@ export const SpendingXRay: React.FC<SpendingXRayProps> = ({ data }) => {
                       key={`${category}-${month}`}
                       className="flex-1 mx-0.5"
                       title={cell ? `${CURRENCY_SYMBOL}${cell.amount.toLocaleString()}` : 'No data'}
-                    >
-                      <div
-                        className="h-8 rounded transition-all cursor-pointer hover:ring-2 hover:ring-offset-1 hover:ring-emerald-400"
-                        style={{
-                          backgroundColor: intensity > 0
-                            ? `rgba(${catIdx < 3 ? '239, 68, 68' : '16, 185, 129'}, ${0.1 + intensity * 0.8})`
-                            : '#f3f4f6'
-                        }}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
-          </div>
-        </div>
         <div className="flex items-center justify-center gap-4 mt-3 text-xs text-gray-500">
+          <span className="flex items-center gap-1">
+            <div className="w-4 h-4 rounded bg-red-400"></div> Top 3 Categories
+          </span>
           <span className="flex items-center gap-1">
             <div className="w-4 h-4 rounded bg-gray-100"></div> Low
           </span>
@@ -386,6 +376,9 @@ export const SpendingXRay: React.FC<SpendingXRayProps> = ({ data }) => {
             <div className="w-4 h-4 rounded bg-emerald-300"></div> Medium
           </span>
           <span className="flex items-center gap-1">
+            <div className="w-4 h-4 rounded bg-emerald-600"></div> High
+          </span>
+        </div>
             <div className="w-4 h-4 rounded bg-emerald-600"></div> High
           </span>
         </div>

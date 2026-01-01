@@ -94,6 +94,7 @@ export const WeeklyRadar: React.FC<{ data: Transaction[] }> = ({ data }) => {
 
         data.forEach(t => {
             const date = new Date(t.date);
+            if (isNaN(date.getTime())) return; // Skip invalid dates
             dayMap[date.getDay()] += t.amount;
         });
 

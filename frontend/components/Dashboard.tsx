@@ -43,7 +43,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onReset }) => {
 
     // Group by category
     const catMap = new Map<string, number>();
-    data.forEach(t => catMap.set(t.category, (catMap.get(t.category) || 0) + t.amount));
+    data.forEach(t => {
+      if (t.amount > 0) {
+        catMap.set(t.category, (catMap.get(t.category) || 0) + t.amount);
+      }
+    });
 
     let topCatName = '';
     let topCatVal = 0;
@@ -58,23 +62,31 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onReset }) => {
     const months = new Set(data.filter(t => t.amount > 0).map(t => t.date.substring(0, 7)));
     const monthCount = months.size || 1;
 
+    const largestTx = sortedByAmt[0] ?? { amount: 0, merchant: 'N/A', category: '', date: '', description: '' };
+
     return {
       totalSpend,
       burnRate: totalSpend / (monthCount * 30),
-      largestTx: sortedByAmt[0],
+      largestTx,
       topCategory: {
         name: topCatName,
-        percentage: (topCatVal / totalSpend) * 100
+        percentage: totalSpend > 0 ? (topCatVal / totalSpend) * 100 : 0
       }
     };
   }, [data]);
 
   const handleAiAnalysis = async () => {
     setLoadingAi(true);
-    const topTx = [...data].sort((a,b) => b.amount - a.amount).slice(0, 10);
-    const result = await analyzeSpending(stats, topTx);
-    setAiInsight(result);
-    setLoadingAi(false);
+    try {
+      const topTx = [...data].sort((a,b) => b.amount - a.amount).slice(0, 10);
+      const result = await analyzeSpending(stats, topTx);
+      setAiInsight(result);
+    } catch (error) {
+      console.error('AI analysis failed:', error);
+      setAiInsight('⚠️ Unable to generate insights at this time. Please try again later.');
+    } finally {
+      setLoadingAi(false);
+    }
   };
 
   return (

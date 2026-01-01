@@ -181,7 +181,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
                 placeholder="0"
                 value={amountRange.min}
                 onChange={(e) => setAmountRange(prev => ({ ...prev, min: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
               />
             </div>
             <div>
@@ -191,7 +191,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
                 placeholder="10000"
                 value={amountRange.max}
                 onChange={(e) => setAmountRange(prev => ({ ...prev, max: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
               />
             </div>
             <div>
@@ -200,7 +200,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
                 type="date"
                 value={dateRange.start}
                 onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
               />
             </div>
             <div>
@@ -209,7 +209,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
                 type="date"
                 value={dateRange.end}
                 onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
               />
             </div>
           </div>
@@ -241,7 +241,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
             <tr>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors select-none"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors select-none"
                 onClick={() => handleSort('date')}
               >
                 <div className="flex items-center gap-1">
@@ -251,7 +251,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
               </th>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors select-none"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors select-none"
                 onClick={() => handleSort('merchant')}
               >
                 <div className="flex items-center gap-1">
@@ -261,7 +261,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
               </th>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors select-none"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors select-none"
                 onClick={() => handleSort('category')}
               >
                 <div className="flex items-center gap-1">
@@ -271,7 +271,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
               </th>
               <th
                 scope="col"
-                className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors select-none"
+                className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors select-none"
                 onClick={() => handleSort('amount')}
               >
                 <div className="flex items-center gap-1 justify-end">

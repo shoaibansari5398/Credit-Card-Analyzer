@@ -124,7 +124,7 @@ export const MerchantBreakdown: React.FC<MerchantBreakdownProps> = ({ data }) =>
         <div className="h-64 mb-4">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={displayMerchants.slice(0, 8)}
+              data={displayMerchants.slice(0, Math.min(showCount, 15))}
               layout="vertical"
               margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
             >
@@ -146,7 +146,7 @@ export const MerchantBreakdown: React.FC<MerchantBreakdownProps> = ({ data }) =>
               />
               <Tooltip content={<CustomTooltip />} cursor={{ fill: 'transparent' }} />
               <Bar dataKey="amount" radius={[0, 4, 4, 0]}>
-                {displayMerchants.slice(0, 8).map((entry, index) => (
+                {displayMerchants.slice(0, Math.min(showCount, 15)).map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Bar>

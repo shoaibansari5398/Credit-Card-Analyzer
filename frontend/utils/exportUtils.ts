@@ -11,10 +11,10 @@ export const exportToCSV = (data: Transaction[], filename: string = 'financial_r
 
   // Map data to rows
   const rows = data.map(t => [
-    t.date,
+    `"${(t.date ?? '').toString().replace(/"/g, '""')}"`,
     `"${t.merchant.replace(/"/g, '""')}"`, // Escape quotes in merchant name
-    t.amount.toFixed(2),
-    t.category,
+    (t.amount ?? 0).toFixed(2),
+    `"${(t.category ?? '').replace(/"/g, '""')}"`,
     t.isRecurring ? 'Yes' : 'No'
   ]);
 
@@ -36,5 +36,9 @@ export const exportToCSV = (data: Transaction[], filename: string = 'financial_r
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+
+  // Delay cleanup to ensure download completes
+  setTimeout(() => {
+    URL.revokeObjectURL(url);
+  }, 100);
 };

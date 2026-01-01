@@ -1,4 +1,4 @@
-import { forwardRef, useMemo, useRef, useEffect, MouseEvent, TouchEvent, CSSProperties, ReactNode } from 'react';
+import { forwardRef, useMemo, useRef, useEffect, useCallback, MouseEvent, TouchEvent, CSSProperties, ReactNode } from 'react';
 import { motion } from 'motion/react';
 
 interface VariableProximityProps {
@@ -125,7 +125,7 @@ const VariableProximity = forwardRef<HTMLSpanElement, VariableProximityProps>((p
     }
   };
 
-  useAnimationFrame(() => {
+  const animationCallback = useCallback(() => {
     if (!containerRef?.current) return;
     const { x, y } = mousePositionRef.current;
     if (lastPositionRef.current.x === x && lastPositionRef.current.y === y) {
@@ -165,7 +165,9 @@ const VariableProximity = forwardRef<HTMLSpanElement, VariableProximityProps>((p
       interpolatedSettingsRef.current[index] = newSettings;
       letterRef.style.fontVariationSettings = newSettings;
     });
-  });
+  }, [containerRef, radius, fromFontVariationSettings, parsedSettings, calculateFalloff]);
+
+  useAnimationFrame(animationCallback);
 
   const words = label.split(' ');
   let letterIndex = 0;

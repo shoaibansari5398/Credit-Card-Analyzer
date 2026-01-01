@@ -207,10 +207,10 @@ export const RiskLeakageDetection: React.FC<RiskLeakageDetectionProps> = ({ data
 
   const getSeverityStyle = (severity: RiskAlert['severity']) => {
     switch (severity) {
-      case 'critical': return { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700', badge: 'bg-red-100 text-red-800' };
-      case 'high': return { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', badge: 'bg-orange-100 text-orange-800' };
-      case 'medium': return { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', badge: 'bg-amber-100 text-amber-800' };
-      case 'low': return { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', badge: 'bg-blue-100 text-blue-800' };
+      case 'critical': return { bg: 'bg-red-50 dark:bg-red-900/10', border: 'border-red-200 dark:border-red-800/30', text: 'text-red-700 dark:text-red-300', badge: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200' };
+      case 'high': return { bg: 'bg-orange-50 dark:bg-orange-900/10', border: 'border-orange-200 dark:border-orange-800/30', text: 'text-orange-700 dark:text-orange-300', badge: 'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-200' };
+      case 'medium': return { bg: 'bg-amber-50 dark:bg-amber-900/10', border: 'border-amber-200 dark:border-amber-800/30', text: 'text-amber-700 dark:text-amber-300', badge: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200' };
+      case 'low': return { bg: 'bg-blue-50 dark:bg-blue-900/10', border: 'border-blue-200 dark:border-blue-800/30', text: 'text-blue-700 dark:text-blue-300', badge: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200' };
     }
   };
 
@@ -235,14 +235,14 @@ export const RiskLeakageDetection: React.FC<RiskLeakageDetectionProps> = ({ data
   if (data.length === 0) return null;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 transition-colors duration-200">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             🛡️ High-Risk & Leakage Detection
           </h2>
-          <p className="text-sm text-gray-500 mt-1">Financial red flags and money leakage alerts</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Financial red flags and money leakage alerts</p>
         </div>
         {totalLeakage > 0 && (
           <div className="text-right">
@@ -256,38 +256,38 @@ export const RiskLeakageDetection: React.FC<RiskLeakageDetectionProps> = ({ data
 
       {/* Summary Cards */}
       <div className="grid grid-cols-4 gap-3 mb-6">
-        <div className={`rounded-lg p-3 text-center ${risks.some(r => r.severity === 'critical') ? 'bg-red-50' : 'bg-gray-50'}`}>
-          <p className="text-2xl font-bold text-red-600">
+        <div className={`rounded-lg p-3 text-center ${risks.some(r => r.severity === 'critical') ? 'bg-red-50 dark:bg-red-900/20' : 'bg-gray-50 dark:bg-gray-700/50'}`}>
+          <p className="text-2xl font-bold text-red-600 dark:text-red-400">
             {risks.filter(r => r.severity === 'critical').length}
           </p>
-          <p className="text-xs text-gray-600">Critical</p>
+          <p className="text-xs text-gray-600 dark:text-gray-400">Critical</p>
         </div>
-        <div className={`rounded-lg p-3 text-center ${risks.some(r => r.severity === 'high') ? 'bg-orange-50' : 'bg-gray-50'}`}>
-          <p className="text-2xl font-bold text-orange-600">
+        <div className={`rounded-lg p-3 text-center ${risks.some(r => r.severity === 'high') ? 'bg-orange-50 dark:bg-orange-900/20' : 'bg-gray-50 dark:bg-gray-700/50'}`}>
+          <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
             {risks.filter(r => r.severity === 'high').length}
           </p>
-          <p className="text-xs text-gray-600">High</p>
+          <p className="text-xs text-gray-600 dark:text-gray-400">High</p>
         </div>
-        <div className="bg-amber-50 rounded-lg p-3 text-center">
-          <p className="text-2xl font-bold text-amber-600">
+        <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3 text-center">
+          <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
             {risks.filter(r => r.severity === 'medium').length}
           </p>
-          <p className="text-xs text-gray-600">Medium</p>
+          <p className="text-xs text-gray-600 dark:text-gray-400">Medium</p>
         </div>
-        <div className="bg-blue-50 rounded-lg p-3 text-center">
-          <p className="text-2xl font-bold text-blue-600">
+        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 text-center">
+          <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
             {risks.filter(r => r.severity === 'low').length}
           </p>
-          <p className="text-xs text-gray-600">Low</p>
+          <p className="text-xs text-gray-600 dark:text-gray-400">Low</p>
         </div>
       </div>
 
       {/* Risk Alerts */}
       {risks.length === 0 ? (
-        <div className="text-center py-12 bg-emerald-50 rounded-lg">
+        <div className="text-center py-12 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
           <span className="text-4xl mb-3 block">✅</span>
-          <p className="font-semibold text-emerald-800">All Clear!</p>
-          <p className="text-sm text-emerald-600 mt-1">No financial red flags detected in your transactions.</p>
+          <p className="font-semibold text-emerald-800 dark:text-emerald-300">All Clear!</p>
+          <p className="text-sm text-emerald-600 dark:text-emerald-400 mt-1">No financial red flags detected in your transactions.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -307,10 +307,10 @@ export const RiskLeakageDetection: React.FC<RiskLeakageDetectionProps> = ({ data
                         {risk.severity.toUpperCase()}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-700">{risk.description}</p>
+                    <p className="text-sm text-gray-700 dark:text-gray-300">{risk.description}</p>
 
                     {risk.amount && risk.amount > 0 && (
-                      <p className="text-sm font-semibold text-gray-900 mt-1">
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white mt-1">
                         Amount: {CURRENCY_SYMBOL}{risk.amount.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                       </p>
                     )}
@@ -320,7 +320,7 @@ export const RiskLeakageDetection: React.FC<RiskLeakageDetectionProps> = ({ data
                         {risk.transactions.slice(0, 3).map((t, i) => (
                           <span
                             key={i}
-                            className="text-xs px-2 py-1 bg-white/70 rounded border border-gray-200"
+                            className="text-xs px-2 py-1 bg-white/70 dark:bg-black/20 text-gray-700 dark:text-gray-300 rounded border border-gray-200 dark:border-gray-600"
                           >
                             {t.merchant} - {CURRENCY_SYMBOL}{t.amount.toFixed(0)} ({t.date})
                           </span>
@@ -334,7 +334,7 @@ export const RiskLeakageDetection: React.FC<RiskLeakageDetectionProps> = ({ data
                     )}
 
                     {risk.recommendation && (
-                      <p className="text-xs text-gray-600 mt-2 flex items-center gap-1">
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-2 flex items-center gap-1">
                         <span>💡</span>
                         <strong>Tip:</strong> {risk.recommendation}
                       </p>
@@ -349,8 +349,8 @@ export const RiskLeakageDetection: React.FC<RiskLeakageDetectionProps> = ({ data
 
       {/* Footer Summary */}
       {risks.length > 0 && (
-        <div className="mt-6 pt-4 border-t border-gray-100">
-          <p className="text-sm text-gray-600">
+        <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
             <span className="font-semibold">{risks.length} issue(s)</span> detected.
             Review and address high-severity items to protect your finances.
           </p>

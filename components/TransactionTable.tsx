@@ -119,13 +119,13 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
   return (
     <div className="flex flex-col h-full">
       {/* Sticky Search and Filter Bar */}
-      <div className="sticky top-0 z-10 bg-white pb-4 space-y-3 border-b border-gray-100 mb-4">
+      <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 pb-4 space-y-3 border-b border-gray-100 dark:border-gray-700 mb-4 transition-colors">
         {/* Search Row */}
         <div className="flex flex-col sm:flex-row gap-3">
           {/* Search Input */}
           <div className="relative flex-1">
             <svg
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -137,7 +137,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
               placeholder="Search by merchant..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+              className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder-gray-400 dark:placeholder-gray-500"
             />
           </div>
 
@@ -145,7 +145,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-4 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none min-w-[140px]"
+            className="px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none min-w-[140px]"
           >
             {categories.map(cat => (
               <option key={cat} value={cat}>
@@ -158,7 +158,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={`px-4 py-2 border rounded-lg text-sm font-medium flex items-center gap-2 transition-colors ${
-              showFilters ? 'bg-blue-50 border-blue-200 text-blue-700' : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+              showFilters ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
             }`}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -173,7 +173,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
 
         {/* Advanced Filters */}
         {showFilters && (
-          <div className="bg-gray-50 rounded-lg p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label className="block text-xs font-medium text-gray-500 mb-1">Min Amount</label>
               <input
@@ -217,8 +217,8 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
 
         {/* Results Count and Clear */}
         <div className="flex items-center justify-between text-sm">
-          <span className="text-gray-500">
-            Showing <span className="font-semibold text-gray-700">{filteredAndSortedTransactions.length}</span> of {transactions.length} transactions
+          <span className="text-gray-500 dark:text-gray-400">
+            Showing <span className="font-semibold text-gray-700 dark:text-gray-200">{filteredAndSortedTransactions.length}</span> of {transactions.length} transactions
           </span>
           {hasActiveFilters && (
             <button
@@ -236,8 +236,8 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
 
       {/* Table with Sortable Headers */}
       <div className="overflow-x-auto custom-scrollbar flex-1">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50 sticky top-0">
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead className="bg-gray-50 dark:bg-gray-700 sticky top-0">
             <tr>
               <th
                 scope="col"
@@ -281,31 +281,31 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {filteredAndSortedTransactions.length === 0 ? (
               <tr>
                 <td colSpan={4} className="px-6 py-12 text-center text-gray-500">
-                  <svg className="w-12 h-12 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <p className="font-medium">No transactions found</p>
-                  <p className="text-sm mt-1">Try adjusting your search or filters</p>
+                  <p className="font-medium text-gray-500 dark:text-gray-400">No transactions found</p>
+                  <p className="text-sm mt-1 text-gray-400 dark:text-gray-500">Try adjusting your search or filters</p>
                 </td>
               </tr>
             ) : (
               filteredAndSortedTransactions.map((t) => (
-                <tr key={t.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{t.date}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 flex items-center gap-2">
+                <tr key={t.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{t.date}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
                     {t.merchant}
                     {t.isRecurring && <span className="bg-purple-100 text-purple-700 text-[10px] px-1.5 py-0.5 rounded">Sub</span>}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
                       {t.category}
                     </span>
                   </td>
-                  <td className={`px-6 py-4 whitespace-nowrap text-sm text-right font-mono ${t.amount < 0 ? 'text-green-600' : 'text-gray-900'}`}>
+                  <td className={`px-6 py-4 whitespace-nowrap text-sm text-right font-mono ${t.amount < 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-900 dark:text-white'}`}>
                     {t.amount < 0 ? '+' : ''}{CURRENCY_SYMBOL}{Math.abs(t.amount).toFixed(2)}
                   </td>
                 </tr>

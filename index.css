@@ -1,5 +1,31 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --chart-axis: #6B7280; /* gray-500 */
+  --chart-grid: #E5E7EB; /* gray-200 */
+  --chart-tooltip-bg: #FFFFFF;
+  --chart-tooltip-text: #1F2937;
+  --chart-tooltip-border: #E5E7EB;
+}
+
+:root[class~="dark"] {
+  --chart-axis: #9CA3AF; /* gray-400 */
+  --chart-grid: #374151; /* gray-700 */
+  --chart-tooltip-bg: #1F2937;
+  --chart-tooltip-text: #F3F4F6;
+  --chart-tooltip-border: #374151;
+}
+
+body {
+    @apply bg-gray-50 text-gray-900 transition-colors duration-200;
+}
+
+:root[class~="dark"] body {
+    @apply bg-gray-900 text-white;
+}
+
 .bg-grid-pattern {
   background-size: 40px 40px;
   background-image: linear-gradient(to right, #e5e7eb 1px, transparent 1px),

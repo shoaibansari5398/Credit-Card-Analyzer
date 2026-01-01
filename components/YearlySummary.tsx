@@ -74,14 +74,14 @@ export const YearlySummary: React.FC<YearlySummaryProps> = ({ data }) => {
   if (expenses.length === 0) return null;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 transition-colors duration-200">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             📊 Monthly Summary Report
           </h2>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             {yearlyStats.dateRange.start.toLocaleDateString()} - {yearlyStats.dateRange.end.toLocaleDateString()}
           </p>
         </div>
@@ -97,37 +97,37 @@ export const YearlySummary: React.FC<YearlySummaryProps> = ({ data }) => {
       </div>
 
       {/* Monthly Breakdown Table */}
-      <div className="overflow-x-auto rounded-lg border border-gray-200">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+      <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead className="bg-gray-50 dark:bg-gray-700/50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Month</th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Spend</th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Transactions</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Top Category</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Top Merchant</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Month</th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Spend</th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Transactions</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Top Category</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Top Merchant</th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-100">
+          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-100 dark:divide-gray-700">
             {monthlyBreakdown.map((row, i) => (
-              <tr key={row.month} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                <td className="px-4 py-3 text-sm font-medium text-gray-900">{row.monthLabel}</td>
-                <td className="px-4 py-3 text-sm text-gray-900 text-right font-mono">
+              <tr key={row.month} className={i % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700/30'}>
+                <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">{row.monthLabel}</td>
+                <td className="px-4 py-3 text-sm text-gray-900 dark:text-white text-right font-mono">
                   {CURRENCY_SYMBOL}{row.spend.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-600 text-right">{row.transactions}</td>
-                <td className="px-4 py-3 text-sm text-gray-600">{row.topCategory}</td>
-                <td className="px-4 py-3 text-sm text-gray-600">{row.topMerchant}</td>
+                <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 text-right">{row.transactions}</td>
+                <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{row.topCategory}</td>
+                <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{row.topMerchant}</td>
               </tr>
             ))}
           </tbody>
-          <tfoot className="bg-emerald-50">
+          <tfoot className="bg-emerald-50 dark:bg-emerald-900/20">
             <tr>
-              <td className="px-4 py-3 text-sm font-bold text-emerald-800">Total</td>
-              <td className="px-4 py-3 text-sm font-bold text-emerald-800 text-right font-mono">
+              <td className="px-4 py-3 text-sm font-bold text-emerald-800 dark:text-emerald-400">Total</td>
+              <td className="px-4 py-3 text-sm font-bold text-emerald-800 dark:text-emerald-400 text-right font-mono">
                 {CURRENCY_SYMBOL}{yearlyStats.totalSpend.toLocaleString(undefined, { maximumFractionDigits: 0 })}
               </td>
-              <td className="px-4 py-3 text-sm font-bold text-emerald-800 text-right">{yearlyStats.totalTransactions}</td>
+              <td className="px-4 py-3 text-sm font-bold text-emerald-800 dark:text-emerald-400 text-right">{yearlyStats.totalTransactions}</td>
               <td colSpan={2}></td>
             </tr>
           </tfoot>

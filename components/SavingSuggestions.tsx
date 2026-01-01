@@ -226,27 +226,27 @@ export const SavingSuggestions: React.FC<SavingSuggestionsProps> = ({ data }) =>
 
   const getPriorityStyle = (priority: Suggestion['priority']) => {
     switch (priority) {
-      case 'high': return 'bg-red-50 border-red-200 text-red-700';
-      case 'medium': return 'bg-amber-50 border-amber-200 text-amber-700';
-      case 'low': return 'bg-blue-50 border-blue-200 text-blue-700';
+      case 'high': return 'bg-red-50 border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-800/30 dark:text-red-300';
+      case 'medium': return 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-900/20 dark:border-amber-800/30 dark:text-amber-300';
+      case 'low': return 'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/20 dark:border-blue-800/30 dark:text-blue-300';
     }
   };
 
   if (expenses.length === 0) return null;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 transition-colors duration-200">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             💡 Saving Suggestions
           </h2>
-          <p className="text-sm text-gray-500 mt-1">Personalized tips to optimize your spending</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Personalized tips to optimize your spending</p>
         </div>
         <div className="text-right">
-          <p className="text-xs text-emerald-500 uppercase tracking-wide">Potential Yearly Savings</p>
-          <p className="text-2xl font-bold text-emerald-600">
+          <p className="text-xs text-emerald-500 dark:text-emerald-400 uppercase tracking-wide">Potential Yearly Savings</p>
+          <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
             {CURRENCY_SYMBOL}{totalSavings.toLocaleString(undefined, { maximumFractionDigits: 0 })}
           </p>
         </div>
@@ -257,24 +257,24 @@ export const SavingSuggestions: React.FC<SavingSuggestionsProps> = ({ data }) =>
         {suggestions.map(suggestion => (
           <div
             key={suggestion.id}
-            className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors"
+            className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors"
           >
             <div className="flex items-start gap-4">
               <span className="text-3xl">{suggestion.icon}</span>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <h4 className="font-semibold text-gray-900">{suggestion.title}</h4>
+                  <h4 className="font-semibold text-gray-900 dark:text-white">{suggestion.title}</h4>
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium border ${getPriorityStyle(suggestion.priority)}`}>
                     {suggestion.priority.toUpperCase()}
                   </span>
                 </div>
-                <p className="text-sm text-gray-600 mb-2">{suggestion.description}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">{suggestion.description}</p>
                 <div className="flex items-center gap-4 text-sm">
-                  <span className="text-emerald-600 font-semibold">
+                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
                     Save ~{CURRENCY_SYMBOL}{suggestion.potentialSaving.toLocaleString(undefined, { maximumFractionDigits: 0 })}/{suggestion.frequency === 'yearly' ? 'year' : 'month'}
                   </span>
-                  <span className="text-gray-400">•</span>
-                  <span className="text-gray-500">{suggestion.category}</span>
+                  <span className="text-gray-400 dark:text-gray-600">•</span>
+                  <span className="text-gray-500 dark:text-gray-400">{suggestion.category}</span>
                 </div>
               </div>
             </div>
@@ -283,14 +283,14 @@ export const SavingSuggestions: React.FC<SavingSuggestionsProps> = ({ data }) =>
       </div>
 
       {/* Summary Footer */}
-      <div className="mt-6 p-4 bg-emerald-50 rounded-lg border border-emerald-200">
+      <div className="mt-6 p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-800/30">
         <div className="flex items-center gap-3">
           <span className="text-2xl">🎯</span>
           <div>
-            <p className="font-semibold text-emerald-800">
+            <p className="font-semibold text-emerald-800 dark:text-emerald-300">
               Implement these suggestions to save up to {CURRENCY_SYMBOL}{totalSavings.toLocaleString(undefined, { maximumFractionDigits: 0 })}/year
             </p>
-            <p className="text-sm text-emerald-600">
+            <p className="text-sm text-emerald-600 dark:text-emerald-400">
               That's ~{CURRENCY_SYMBOL}{(totalSavings / 12).toLocaleString(undefined, { maximumFractionDigits: 0 })}/month back in your pocket!
             </p>
           </div>

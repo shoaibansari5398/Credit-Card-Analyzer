@@ -15,10 +15,12 @@ export const CalendarHeatmap: React.FC<CalendarHeatmapProps> = ({ data }) => {
       const current = dailyMap.get(t.date) || 0;
       dailyMap.set(t.date, current + t.amount);
     });
-    
+
     // Sort keys and fill gaps if necessary, but D3 handles sparse data well if we map correctly
     return Array.from(dailyMap.entries()).map(([date, value]) => ({ date: new Date(date), value }));
   }, [data]);
+
+
 
   useEffect(() => {
     if (!svgRef.current || processedData.length === 0) return;
@@ -34,7 +36,7 @@ export const CalendarHeatmap: React.FC<CalendarHeatmapProps> = ({ data }) => {
 
     // Group by week
     const timeWeek = d3.timeSunday;
-    
+
     // Determine date range from data or fixed 30 days
     const endDate = new Date();
     const startDate = new Date();
@@ -66,7 +68,7 @@ export const CalendarHeatmap: React.FC<CalendarHeatmapProps> = ({ data }) => {
       .attr("fill", d => {
         const iso = d.toISOString().split('T')[0];
         const record = processedData.find(p => p.date.toISOString().split('T')[0] === iso);
-        return record ? colorScale(record.value) : "#f3f4f6"; // Gray for no spend
+        return record ? colorScale(record.value) : "var(--chart-grid)";
       })
       .append("title")
       .text(d => {
@@ -85,7 +87,8 @@ export const CalendarHeatmap: React.FC<CalendarHeatmapProps> = ({ data }) => {
       .attr("x", -10)
       .attr("y", (d, i) => i * (cellSize + cellGap) + 11)
       .style("font-size", "10px")
-      .attr("fill", "#9ca3af");
+      .style("font-size", "10px")
+      .attr("fill", "var(--chart-axis)");
 
     // Month labels (Simplified)
     // In a full app, we'd calculate month boundaries
@@ -95,7 +98,9 @@ export const CalendarHeatmap: React.FC<CalendarHeatmapProps> = ({ data }) => {
       .text("Spending Intensity (Last 60 Days)")
       .style("font-size", "12px")
       .style("font-weight", "600")
-      .attr("fill", "#4b5563");
+      .style("font-weight", "600")
+      .style("font-weight", "600")
+      .attr("fill", "var(--chart-axis)");
 
   }, [processedData]);
 

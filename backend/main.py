@@ -8,8 +8,19 @@ import requests
 import json
 import time
 import gc
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from pydantic import BaseModel, EmailStr, ValidationError
 from dotenv import load_dotenv
 from security_utils import mask_transaction_pii
+
+# Sanitize helper
+def sanitize_text(text: str) -> str:
+    """Remove potentially problematic characters from text to prevent injection."""
+    if not text:
+        return ""
+    return text.replace('\r', '').replace('\n', ' ').replace('\x00', '').strip()
 
 load_dotenv(dotenv_path="../.env")
 
@@ -28,6 +39,74 @@ app.add_middleware(
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "timestamp": time.time()}
+
+# Email Configuration
+SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.gmail.com")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+SMTP_USERNAME = os.getenv("SMTP_USERNAME")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
+SENDER_EMAIL = os.getenv("SENDER_EMAIL", SMTP_USERNAME)
+RECIPIENT_EMAIL = os.getenv("RECIPIENT_EMAIL", SMTP_USERNAME)
+
+class ContactRequest(BaseModel):
+    category: str
+    name: str
+    email: str # Staying with str to avoid missing dependency issues, relying on sanitization
+    description: str
+
+@app.post("/contact")
+async def contact_support(request: ContactRequest):
+    print(f"Received contact request: {request}")
+
+    # Sanitize inputs
+    safe_category = sanitize_text(request.category)
+    safe_name = sanitize_text(request.name)
+    safe_email = sanitize_text(request.email)
+    # Description needs to allow newlines for the body, but should be careful?
+    # Actually, for the body it is fine, but we should ensure no header injection via body if that's even possible (unlikely in MIMEText).
+    # But CodeRabbit suggested removing \r.
+    safe_description = request.description.replace('\r', '')
+
+    # 1. Check if SMTP is configured
+    if not SMTP_USERNAME or not SMTP_PASSWORD:
+        print("SMTP credentials not found. simulating email send.")
+        print(f"Would send email to {RECIPIENT_EMAIL} from {safe_email} about {safe_category}")
+        return {"status": "success", "message": "Support request received (Simulation)"}
+
+    # 2. Construct Email
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = SENDER_EMAIL
+        msg['To'] = RECIPIENT_EMAIL
+        msg['Subject'] = f"New Support Request: {safe_category}"
+        msg['Reply-To'] = safe_email
+
+        body = f"""
+        New Contact Request
+        ------------------
+        Category: {safe_category}
+        Name: {safe_name}
+        Email: {safe_email}
+
+        Description:
+        {safe_description}
+        """
+        msg.attach(MIMEText(body, 'plain'))
+
+        # 3. Send Email
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            server.starttls()
+            server.login(SMTP_USERNAME, SMTP_PASSWORD)
+            server.send_message(msg)
+
+        print("Email sent successfully")
+        return {"status": "success", "message": "Support request sent successfully"}
+
+    except Exception as e:
+        print(f"Failed to send email: {str(e)}")
+        # Valid request but failed transmission - return error or handled success?
+        # Let's return error so frontend knows
+        raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 

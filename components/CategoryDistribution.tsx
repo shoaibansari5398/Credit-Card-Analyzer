@@ -51,12 +51,12 @@ export const CategoryDistribution: React.FC<CategoryDistributionProps> = ({ data
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
-          <p className="font-semibold text-gray-900">{data.name}</p>
-          <p className="text-sm text-gray-600">
+        <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
+          <p className="font-semibold text-gray-900 dark:text-white">{data.name}</p>
+          <p className="text-sm text-gray-600 dark:text-gray-300">
             {CURRENCY_SYMBOL}{data.amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}
           </p>
-          <p className="text-xs text-gray-500">{data.percentage.toFixed(1)}% of total</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">{data.percentage.toFixed(1)}% of total</p>
         </div>
       );
     }
@@ -66,18 +66,18 @@ export const CategoryDistribution: React.FC<CategoryDistributionProps> = ({ data
   if (expenses.length === 0) return null;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 transition-colors duration-200">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             📁 Category Distribution
           </h2>
-          <p className="text-sm text-gray-500 mt-1">Spending breakdown by category</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Spending breakdown by category</p>
         </div>
         <div className="text-right">
-          <p className="text-xs text-gray-500 uppercase tracking-wide">Categories</p>
-          <p className="text-lg font-bold text-gray-900">{categories.length}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Categories</p>
+          <p className="text-lg font-bold text-gray-900 dark:text-white">{categories.length}</p>
         </div>
       </div>
 
@@ -116,13 +116,13 @@ export const CategoryDistribution: React.FC<CategoryDistributionProps> = ({ data
               />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="font-medium text-gray-900 text-sm truncate">{cat.name}</span>
-                  <span className="text-sm text-gray-700 font-semibold">
+                  <span className="font-medium text-gray-900 dark:text-gray-200 text-sm truncate">{cat.name}</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300 font-semibold">
                     {CURRENCY_SYMBOL}{cat.amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="flex-1 h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all duration-500"
                       style={{
@@ -131,7 +131,7 @@ export const CategoryDistribution: React.FC<CategoryDistributionProps> = ({ data
                       }}
                     />
                   </div>
-                  <span className="text-xs text-gray-500 w-12 text-right">{cat.percentage.toFixed(1)}%</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 w-12 text-right">{cat.percentage.toFixed(1)}%</span>
                 </div>
               </div>
             </div>
@@ -140,19 +140,19 @@ export const CategoryDistribution: React.FC<CategoryDistributionProps> = ({ data
       </div>
 
       {/* Top 3 Categories Summary */}
-      <div className="mt-6 pt-4 border-t border-gray-100">
+       <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
         <div className="grid grid-cols-3 gap-3">
           {categories.slice(0, 3).map((cat, i) => (
             <div
               key={cat.name}
-              className="p-3 rounded-lg text-center"
+              className="p-3 rounded-lg text-center bg-opacity-10 dark:bg-opacity-20"
               style={{ backgroundColor: `${COLORS[i]}15` }}
             >
-              <p className="text-xs font-medium text-gray-500 uppercase mb-1">
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">
                 #{i + 1} Category
               </p>
-              <p className="font-semibold text-gray-900 text-sm truncate">{cat.name}</p>
-              <p className="text-xs text-gray-600">{cat.count} transactions</p>
+              <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">{cat.name}</p>
+              <p className="text-xs text-gray-600 dark:text-gray-400">{cat.count} transactions</p>
             </div>
           ))}
         </div>

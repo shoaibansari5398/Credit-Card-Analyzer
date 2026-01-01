@@ -22,10 +22,3 @@ export interface CategoryNode {
   value: number;
   children?: CategoryNode[];
 }
-
-export enum AppState {
-  LANDING = 'LANDING',
-  UPLOAD = 'UPLOAD',
-  PROCESSING = 'PROCESSING',
-  DASHBOARD = 'DASHBOARD'
-}

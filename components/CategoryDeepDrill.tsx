@@ -30,6 +30,22 @@ interface MonthlyTrend {
   amount: number;
 }
 
+
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
+        <p className="font-semibold text-gray-900 dark:text-white mb-1">{label}</p>
+        <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">
+          {CURRENCY_SYMBOL}{payload[0].value.toLocaleString()}
+        </p>
+        <p className="text-xs text-gray-500 dark:text-gray-400">Total Spend</p>
+      </div>
+    );
+  }
+  return null;
+};
+
 export const CategoryDeepDrill: React.FC<CategoryDeepDrillProps> = ({ data }) => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
@@ -146,14 +162,14 @@ export const CategoryDeepDrill: React.FC<CategoryDeepDrillProps> = ({ data }) =>
 
   const getCategoryColor = (index: number) => {
     const colors = [
-      'bg-blue-100 text-blue-700 border-blue-200',
-      'bg-emerald-100 text-emerald-700 border-emerald-200',
-      'bg-amber-100 text-amber-700 border-amber-200',
-      'bg-purple-100 text-purple-700 border-purple-200',
-      'bg-rose-100 text-rose-700 border-rose-200',
-      'bg-cyan-100 text-cyan-700 border-cyan-200',
-      'bg-orange-100 text-orange-700 border-orange-200',
-      'bg-pink-100 text-pink-700 border-pink-200'
+      'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800/30',
+      'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800/30',
+      'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800/30',
+      'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:text-purple-300 dark:border-purple-800/30',
+      'bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/20 dark:text-rose-300 dark:border-rose-800/30',
+      'bg-cyan-100 text-cyan-700 border-cyan-200 dark:bg-cyan-900/20 dark:text-cyan-300 dark:border-cyan-800/30',
+      'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-300 dark:border-orange-800/30',
+      'bg-pink-100 text-pink-700 border-pink-200 dark:bg-pink-900/20 dark:text-pink-300 dark:border-pink-800/30'
     ];
     return colors[index % colors.length];
   };
@@ -161,14 +177,14 @@ export const CategoryDeepDrill: React.FC<CategoryDeepDrillProps> = ({ data }) =>
   if (debits.length === 0) return null;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 transition-colors duration-200">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             🔍 Category Deep Drill
           </h2>
-          <p className="text-sm text-gray-500 mt-1">Click a category to see detailed breakdown</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Click a category to see detailed breakdown</p>
         </div>
       </div>
 
@@ -180,7 +196,7 @@ export const CategoryDeepDrill: React.FC<CategoryDeepDrillProps> = ({ data }) =>
             onClick={() => setSelectedCategory(selectedCategory === cat.name ? null : cat.name)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all border ${
               selectedCategory === cat.name
-                ? 'bg-gray-900 text-white border-gray-900 shadow-md'
+                ? 'bg-gray-900 text-white border-gray-900 shadow-md dark:bg-gray-700 dark:border-gray-600'
                 : `${getCategoryColor(i)} hover:shadow-sm`
             }`}
           >
@@ -192,54 +208,54 @@ export const CategoryDeepDrill: React.FC<CategoryDeepDrillProps> = ({ data }) =>
 
       {/* Category Details Panel */}
       {selectedCategory && categoryDetails && (
-        <div className="bg-gray-50 rounded-xl p-6 space-y-6">
+        <div className="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-6 space-y-6">
           {/* Stats Row */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-white rounded-lg p-4 shadow-sm">
-              <p className="text-xs text-gray-500 uppercase tracking-wide">Total Spent</p>
-              <p className="text-2xl font-bold text-gray-900">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+              <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total Spent</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
                 {CURRENCY_SYMBOL}{categoryDetails.totalSpend.toLocaleString(undefined, { maximumFractionDigits: 0 })}
               </p>
             </div>
-            <div className="bg-white rounded-lg p-4 shadow-sm">
-              <p className="text-xs text-gray-500 uppercase tracking-wide">Avg per Visit</p>
-              <p className="text-2xl font-bold text-gray-900">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+              <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Avg per Visit</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
                 {CURRENCY_SYMBOL}{categoryDetails.avgPerVisit.toLocaleString(undefined, { maximumFractionDigits: 0 })}
               </p>
             </div>
-            <div className="bg-white rounded-lg p-4 shadow-sm">
-              <p className="text-xs text-gray-500 uppercase tracking-wide">Transactions</p>
-              <p className="text-2xl font-bold text-gray-900">{categoryDetails.transactionCount}</p>
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+              <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Transactions</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{categoryDetails.transactionCount}</p>
             </div>
-            <div className="bg-white rounded-lg p-4 shadow-sm">
-              <p className="text-xs text-gray-500 uppercase tracking-wide">Share of Total</p>
-              <p className="text-2xl font-bold text-gray-900">{categoryDetails.percentage.toFixed(1)}%</p>
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+              <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Share of Total</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{categoryDetails.percentage.toFixed(1)}%</p>
             </div>
           </div>
 
           {/* Two Column Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Top Merchants */}
-            <div className="bg-white rounded-lg p-4 shadow-sm">
-              <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 🏪 Top Merchants in {selectedCategory}
               </h3>
               <div className="space-y-3">
                 {categoryDetails.merchants.map((m, i) => (
                   <div key={m.merchant} className="flex items-center gap-3">
                     <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                      i < 3 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-600'
+                      i < 3 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
                     }`}>
                       {i + 1}
                     </span>
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
-                        <span className="font-medium text-gray-900 text-sm">{m.merchant}</span>
-                        <span className="text-sm text-gray-700 font-semibold">
+                        <span className="font-medium text-gray-900 dark:text-white text-sm">{m.merchant}</span>
+                        <span className="text-sm text-gray-700 dark:text-gray-300 font-semibold">
                           {CURRENCY_SYMBOL}{m.amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between text-xs text-gray-500">
+                      <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
                         <span>{m.count} transactions</span>
                         <span>{m.percentage.toFixed(1)}%</span>
                       </div>
@@ -250,29 +266,33 @@ export const CategoryDeepDrill: React.FC<CategoryDeepDrillProps> = ({ data }) =>
             </div>
 
             {/* Monthly Trend Chart */}
-            <div className="bg-white rounded-lg p-4 shadow-sm">
-              <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 📈 Monthly Trend
                 {categoryDetails.trend === 'increasing' && (
-                  <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">↗ Increasing</span>
+                  <span className="text-xs bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 px-2 py-0.5 rounded-full">↗ Increasing</span>
                 )}
                 {categoryDetails.trend === 'decreasing' && (
-                  <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">↘ Decreasing</span>
+                  <span className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-2 py-0.5 rounded-full">↘ Decreasing</span>
                 )}
               </h3>
               <div className="h-40">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={categoryDetails.monthlyTrend} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="monthLabel" tick={{ fontSize: 10 }} />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--chart-grid)" />
+                    <XAxis
+                      dataKey="monthLabel"
+                      tick={{ fontSize: 10, fill: 'var(--chart-axis)' }}
+                      axisLine={{ stroke: 'var(--chart-grid)' }}
+                      tickLine={false}
+                    />
                     <YAxis
-                      tick={{ fontSize: 10 }}
+                      tick={{ fontSize: 10, fill: 'var(--chart-axis)' }}
                       tickFormatter={(v) => `${CURRENCY_SYMBOL}${(v/1000).toFixed(0)}k`}
+                      axisLine={false}
+                      tickLine={false}
                     />
-                    <Tooltip
-                      formatter={(value: number) => [`${CURRENCY_SYMBOL}${value.toLocaleString()}`, 'Spend']}
-                      contentStyle={{ fontSize: '12px', borderRadius: '8px' }}
-                    />
+                    <Tooltip content={<CustomTooltip />} />
                     <Line
                       type="monotone"
                       dataKey="amount"
@@ -287,38 +307,38 @@ export const CategoryDeepDrill: React.FC<CategoryDeepDrillProps> = ({ data }) =>
           </div>
 
           {/* Savings Suggestions */}
-          <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-lg p-4 border border-emerald-200">
-            <h3 className="font-semibold text-emerald-900 mb-3 flex items-center gap-2">
+          <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-lg p-4 border border-emerald-200 dark:border-emerald-800/30">
+            <h3 className="font-semibold text-emerald-900 dark:text-emerald-300 mb-3 flex items-center gap-2">
               💡 Savings Potential
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-white/70 rounded-lg p-3">
-                <p className="text-sm text-gray-700">
-                  Cutting <span className="font-bold">{selectedCategory}</span> by <span className="text-emerald-600 font-bold">10%</span> saves:
+              <div className="bg-white/70 dark:bg-black/20 rounded-lg p-3">
+                <p className="text-sm text-gray-700 dark:text-gray-300">
+                  Cutting <span className="font-bold">{selectedCategory}</span> by <span className="text-emerald-600 dark:text-emerald-400 font-bold">10%</span> saves:
                 </p>
-                <p className="text-xl font-bold text-emerald-700 mt-1">
+                <p className="text-xl font-bold text-emerald-700 dark:text-emerald-300 mt-1">
                   {CURRENCY_SYMBOL}{categoryDetails.savings10Pct.toLocaleString(undefined, { maximumFractionDigits: 0 })}/year
                 </p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   ~{CURRENCY_SYMBOL}{(categoryDetails.savings10Pct / 12).toLocaleString(undefined, { maximumFractionDigits: 0 })}/month
                 </p>
               </div>
-              <div className="bg-white/70 rounded-lg p-3">
-                <p className="text-sm text-gray-700">
-                  Cutting <span className="font-bold">{selectedCategory}</span> by <span className="text-emerald-600 font-bold">20%</span> saves:
+              <div className="bg-white/70 dark:bg-black/20 rounded-lg p-3">
+                <p className="text-sm text-gray-700 dark:text-gray-300">
+                  Cutting <span className="font-bold">{selectedCategory}</span> by <span className="text-emerald-600 dark:text-emerald-400 font-bold">20%</span> saves:
                 </p>
-                <p className="text-xl font-bold text-emerald-700 mt-1">
+                <p className="text-xl font-bold text-emerald-700 dark:text-emerald-300 mt-1">
                   {CURRENCY_SYMBOL}{categoryDetails.savings20Pct.toLocaleString(undefined, { maximumFractionDigits: 0 })}/year
                 </p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   ~{CURRENCY_SYMBOL}{(categoryDetails.savings20Pct / 12).toLocaleString(undefined, { maximumFractionDigits: 0 })}/month
                 </p>
               </div>
             </div>
 
             {/* Context-specific suggestions */}
-            <div className="mt-4 pt-3 border-t border-emerald-200">
-              <p className="text-sm text-emerald-800">
+            <div className="mt-4 pt-3 border-t border-emerald-200 dark:border-emerald-800/30">
+              <p className="text-sm text-emerald-800 dark:text-emerald-300">
                 {categoryDetails.name.toLowerCase().includes('dining') || categoryDetails.name.toLowerCase().includes('food') ? (
                   <>💡 <strong>Tip:</strong> Cooking at home 2 more times per week could achieve these savings.</>
                 ) : categoryDetails.name.toLowerCase().includes('shopping') ? (
@@ -337,7 +357,7 @@ export const CategoryDeepDrill: React.FC<CategoryDeepDrillProps> = ({ data }) =>
           {/* Close Button */}
           <button
             onClick={() => setSelectedCategory(null)}
-            className="w-full py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="w-full py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
           >
             Close breakdown
           </button>

@@ -28,7 +28,7 @@ app = FastAPI()
 
 # Configure CORS
 # Configure CORS
-ALLOWED_ORIGINS = json.loads(os.getenv("ALLOWED_ORIGINS", '["http://localhost:5173", "http://localhost:8000"]'))
+ALLOWED_ORIGINS = json.loads(os.getenv("ALLOWED_ORIGINS", '["http://localhost:5173", "http://localhost:3000", "http://localhost:8000"]'))
 
 app.add_middleware(
     CORSMiddleware,
@@ -112,10 +112,10 @@ async def contact_support(request: ContactRequest):
         # Let's return error so frontend knows
         raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-# Groq model - Using Llama 3.3 70B for best quality
-GROQ_MODEL = "llama-3.3-70b-versatile"
+# Gemini model - Using Gemini 2.0 Flash for fast, quality responses
+GEMINI_MODEL = "gemini-2.0-flash"
 
 SYSTEM_PROMPT = """
 You are a specialized data extraction AI.
@@ -133,40 +133,43 @@ Output ONLY raw JSON. No markdown formatting.
 """
 
 
-def call_groq(extracted_text: str) -> str | None:
-    """Call Groq API with Llama 3.3 70B."""
-    if not GROQ_API_KEY:
+def call_gemini(extracted_text: str) -> str | None:
+    """Call Gemini API for transaction extraction."""
+    if not GEMINI_API_KEY:
         return None
 
-    print(f"Calling Groq API with model: {GROQ_MODEL}")
+    print(f"Calling Gemini API with model: {GEMINI_MODEL}")
     try:
         response = requests.post(
-            "https://api.groq.com/openai/v1/chat/completions",
+            f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}",
             headers={
-                "Authorization": f"Bearer {GROQ_API_KEY}",
                 "Content-Type": "application/json",
             },
             json={
-                "model": GROQ_MODEL,
-                "messages": [
-                    {"role": "system", "content": SYSTEM_PROMPT},
-                    {"role": "user", "content": f"Here is the bank statement text:\n\n{extracted_text[:30000]}"}
+                "contents": [
+                    {
+                        "parts": [
+                            {"text": f"{SYSTEM_PROMPT}\n\nHere is the bank statement text:\n\n{extracted_text[:30000]}"}
+                        ]
+                    }
                 ],
-                "temperature": 0.7,
-                "max_tokens": 4096
+                "generationConfig": {
+                    "temperature": 0.7,
+                    "maxOutputTokens": 4096
+                }
             },
             timeout=60
         )
 
         if response.status_code == 200:
             ai_data = response.json()
-            return ai_data['choices'][0]['message']['content']
+            return ai_data['candidates'][0]['content']['parts'][0]['text']
         else:
-            print(f"Groq Error {response.status_code}: {response.text}")
+            print(f"Gemini Error {response.status_code}: {response.text}")
             return None
 
     except Exception as e:
-        print(f"Groq Exception: {str(e)}")
+        print(f"Gemini Exception: {str(e)}")
         return None
 
 
@@ -194,8 +197,8 @@ async def analyze_statement(
     file: UploadFile = File(...),
     password: str = Form(None)
 ):
-    if not GROQ_API_KEY:
-        raise HTTPException(status_code=500, detail="Missing GROQ_API_KEY. Please set it in your .env file.")
+    if not GEMINI_API_KEY:
+        raise HTTPException(status_code=500, detail="Missing GEMINI_API_KEY. Please set it in your .env file.")
 
     try:
         start_time = time.time()
@@ -256,11 +259,11 @@ async def analyze_statement(
         # 3. Pre-Process & Scrub PII
         scrubbed_text = scrub_sensitive_data(extracted_text)
 
-        # 4. Call Groq API
-        content = call_groq(scrubbed_text)
+        # 4. Call Gemini API
+        content = call_gemini(scrubbed_text)
 
         if not content:
-            raise HTTPException(status_code=500, detail="Groq API failed. Please check your API key and try again.")
+            raise HTTPException(status_code=500, detail="Gemini API failed. Please check your API key and try again.")
 
         # 4. Parse JSON and apply PII masking
         transactions = parse_json_response(content)

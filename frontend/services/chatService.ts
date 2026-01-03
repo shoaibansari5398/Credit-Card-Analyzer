@@ -1,5 +1,5 @@
 import { Transaction } from "../types";
-import Groq from "groq-sdk";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const CHAT_SYSTEM_INSTRUCTION = `You are a helpful financial assistant that analyzes credit card transaction data.
 You have access to the user's transaction history and can answer questions about their spending patterns.
@@ -86,35 +86,36 @@ ${transactions.slice(-20).map(t => `${t.date}: ${t.merchant} - ₹${t.amount} [$
 `;
 };
 
-// Call Groq API for chat
-const callGroqChat = async (
+// Call Gemini API for chat
+const callGeminiChat = async (
   userMessage: string,
   transactionContext: string,
   conversationHistory: { role: 'user' | 'assistant'; content: string }[]
 ): Promise<string> => {
-  const groq = new Groq({
-    apiKey: process.env.GROQ_API_KEY,
-    dangerouslyAllowBrowser: true
-  });
+  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-  const messages: { role: 'system' | 'user' | 'assistant'; content: string }[] = [
-    { role: "system", content: CHAT_SYSTEM_INSTRUCTION },
-    { role: "user", content: `Here is my transaction data for context:\n${transactionContext}` },
-    { role: "assistant", content: "I've analyzed your transaction data. Feel free to ask me any questions about your spending!" },
-    ...conversationHistory.slice(-10), // Keep last 10 messages for context
-    { role: "user", content: userMessage }
-  ];
+  // Build conversation context
+  const historyText = conversationHistory
+    .slice(-10)
+    .map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`)
+    .join('\n\n');
 
-  const chatCompletion = await groq.chat.completions.create({
-    messages,
-    model: "llama-3.3-70b-versatile",
-    temperature: 0.7,
-    max_completion_tokens: 1024,
-    top_p: 1,
-    stream: false
-  });
+  const prompt = `${CHAT_SYSTEM_INSTRUCTION}
 
-  return chatCompletion.choices[0]?.message?.content || "I couldn't process your request. Please try again.";
+Here is the user's transaction data for context:
+${transactionContext}
+
+Previous conversation:
+${historyText}
+
+User's current question: ${userMessage}
+
+Please respond helpfully based on the transaction data above.`;
+
+  const result = await model.generateContent(prompt);
+  const response = await result.response;
+  return response.text() || "I couldn't process your request. Please try again.";
 };
 
 export const sendChatMessage = async (
@@ -123,12 +124,12 @@ export const sendChatMessage = async (
   conversationHistory: { role: 'user' | 'assistant'; content: string }[]
 ): Promise<string> => {
   try {
-    if (!process.env.GROQ_API_KEY) {
-      return "⚠️ **API Key Missing**\n\nPlease set `GROQ_API_KEY` in your .env file to enable the chatbot.";
+    if (!process.env.GEMINI_API_KEY) {
+      return "⚠️ **API Key Missing**\n\nPlease set `GEMINI_API_KEY` in your .env file to enable the chatbot.";
     }
 
     const context = buildTransactionContext(transactions);
-    const response = await callGroqChat(userMessage, context, conversationHistory);
+    const response = await callGeminiChat(userMessage, context, conversationHistory);
 
     return response;
   } catch (error) {

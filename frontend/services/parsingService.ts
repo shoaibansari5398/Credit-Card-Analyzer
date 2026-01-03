@@ -8,7 +8,7 @@ export const parseStatementFile = async (file: File, password?: string): Promise
   }
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+  const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 second timeout
 
   try {
     const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';

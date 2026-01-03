@@ -77,6 +77,11 @@ async def validation_exception_handler(request, exc):
         headers={"Access-Control-Allow-Origin": "*"}
     )
 
+# Root endpoint for easy connectivity check
+@app.get("/")
+async def root():
+    return {"message": "Credit Card Analyzer API is running", "docs": "/docs"}
+
 # Health check endpoint
 @app.get("/health")
 async def health_check():

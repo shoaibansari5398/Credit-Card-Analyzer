@@ -28,20 +28,22 @@ app = FastAPI()
 
 # Configure CORS
 # Configure CORS
-# Configure CORS
 try:
-    origins_str = os.getenv("ALLOWED_ORIGINS", '["http://localhost:5173", "http://localhost:3000", "http://localhost:8000"]')
+    # Default to localhost if not set
+    default_origins = '["http://localhost:5173", "http://localhost:3000"]'
+    origins_str = os.getenv("ALLOWED_ORIGINS", default_origins)
+
     if origins_str.strip().startswith("["):
         ALLOWED_ORIGINS = json.loads(origins_str)
     else:
         ALLOWED_ORIGINS = [origin.strip() for origin in origins_str.split(",") if origin.strip()]
 except Exception as e:
     print(f"Error parsing ALLOWED_ORIGINS: {e}")
-    ALLOWED_ORIGINS = ["*"]
+    ALLOWED_ORIGINS = ["http://localhost:5173", "http://localhost:3000"]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Allow ALL origins for now to fix the blocking issue
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

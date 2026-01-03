@@ -66,6 +66,8 @@ export const MerchantBreakdown: React.FC<MerchantBreakdownProps> = ({ data }) =>
   }, [expenses, totalSpend]);
 
   const displayMerchants = merchants.slice(0, showCount);
+  // Cap chart display at 15 items for readability (bar height becomes too thin beyond this)
+  const chartDisplayMerchants = displayMerchants.slice(0, 15);
 
   if (expenses.length === 0) return null;
 
@@ -124,7 +126,7 @@ export const MerchantBreakdown: React.FC<MerchantBreakdownProps> = ({ data }) =>
         <div className="h-64 mb-4">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={displayMerchants.slice(0, Math.min(showCount, 15))}
+              data={chartDisplayMerchants}
               layout="vertical"
               margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
             >
@@ -146,7 +148,7 @@ export const MerchantBreakdown: React.FC<MerchantBreakdownProps> = ({ data }) =>
               />
               <Tooltip content={<CustomTooltip />} cursor={{ fill: 'transparent' }} />
               <Bar dataKey="amount" radius={[0, 4, 4, 0]}>
-                {displayMerchants.slice(0, Math.min(showCount, 15)).map((entry, index) => (
+                {chartDisplayMerchants.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Bar>

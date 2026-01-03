@@ -7,17 +7,17 @@ export const parseStatementFile = async (file: File, password?: string): Promise
     formData.append("password", password);
   }
 
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
   try {
     const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
     const response = await fetch(`${apiBaseUrl}/analyze`, {
       method: "POST",
       body: formData,
       signal: controller.signal,
     });
-    clearTimeout(timeoutId);
 
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({ detail: response.statusText }));
@@ -25,20 +25,28 @@ export const parseStatementFile = async (file: File, password?: string): Promise
     }
 
     const rawData = await response.json();
-    return rawData.map((item: any, index: number) => ({
-      id: `parsed-tx-${index}-${Date.now()}`,
-      date: item.date || new Date().toISOString(),
-      merchant: item.merchant || 'Unknown',
-      amount: Number(item.amount) || 0,
-      category: item.category || 'Uncategorized',
-      isRecurring: !!item.isRecurring
-    })).filter(tx => tx.date && tx.merchant && !isNaN(tx.amount));
-      date: item.date,
-      merchant: item.merchant,
-      amount: Number(item.amount),
-      category: item.category,
-      isRecurring: !!item.isRecurring
-    }));
+
+    // Validate array response
+    if (!Array.isArray(rawData)) {
+      throw new Error('Invalid response format: expected an array');
+    }
+
+    return rawData
+      .filter((item: any) =>
+        // Only include items with valid required fields BEFORE applying defaults
+        item &&
+        (item.date || item.merchant) &&
+        item.amount !== undefined &&
+        !isNaN(Number(item.amount))
+      )
+      .map((item: any, index: number) => ({
+        id: `parsed-tx-${index}-${Date.now()}`,
+        date: item.date || new Date().toISOString(),
+        merchant: item.merchant || 'Unknown',
+        amount: Number(item.amount) || 0,
+        category: item.category || 'Uncategorized',
+        isRecurring: !!item.isRecurring
+      }));
 
   } catch (error: any) {
     console.error("Backend Analysis Error:", error);
@@ -47,5 +55,7 @@ export const parseStatementFile = async (file: File, password?: string): Promise
         throw new Error(error.message);
     }
     throw error;
+  } finally {
+    clearTimeout(timeoutId);
   }
 };

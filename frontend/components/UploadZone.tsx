@@ -47,7 +47,7 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onFileSelect }) => {
             <div
                 className={`w-full transition-all duration-300 bg-white dark:bg-gray-800 shadow-xl ${
                 isDragOver ? 'border-emerald-500 ring-4 ring-emerald-50 dark:ring-emerald-900/20 scale-[1.02]' : 'border-gray-100 dark:border-gray-700 hover:border-emerald-200 dark:hover:border-emerald-700 hover:shadow-2xl'
-                } border-2 border-dashed rounded-3xl p-12 cursor-pointer text-center group animate-slide-up delay-100`}
+                } border-2 border-dashed rounded-3xl p-12 cursor-pointer text-center group animate-slide-up delay-100 focus:outline-none focus:ring-4 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900`}
                 role="button"
                 tabIndex={0}
                 aria-label="Upload files by clicking or dragging and dropping"

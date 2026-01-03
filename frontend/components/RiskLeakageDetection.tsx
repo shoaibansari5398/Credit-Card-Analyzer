@@ -32,36 +32,36 @@ export const RiskLeakageDetection: React.FC<RiskLeakageDetectionProps> = ({ data
     const alerts: RiskAlert[] = [];
 
     // 1. Duplicate Charges Detection
-    const txByKey = new Map<string, Transaction[]>();
+    // Group transactions by merchant+amount+date (same day) to find true duplicates
+    const txByKeyDate = new Map<string, Transaction[]>();
     debits.forEach(t => {
-      // Key: same merchant + same amount (dates checked separately)
-      const key = `${t.merchant.toLowerCase()}_${t.amount.toFixed(2)}`;
-      const existing = txByKey.get(key) || [];
+      // Key: same merchant + same amount + same date
+      // Use Date parsing for robust handling of various date formats
+      const parsedDate = new Date(t.date);
+      const dateKey = !isNaN(parsedDate.getTime())
+        ? parsedDate.toISOString().split('T')[0]
+        : t.date; // Fallback to original if invalid
+      const key = `${t.merchant.toLowerCase()}_${t.amount.toFixed(2)}_${dateKey}`;
+      const existing = txByKeyDate.get(key) || [];
       existing.push(t);
-      txByKey.set(key, existing);
+      txByKeyDate.set(key, existing);
     });
 
-    txByKey.forEach((transactions, key) => {
+    // Find same-day duplicates
+    txByKeyDate.forEach((transactions, key) => {
       if (transactions.length >= 2) {
-        // Check if they're on the same day or consecutive days
-        const dates = transactions.map(t => new Date(t.date).getTime()).sort();
-        const minDate = dates[0];
-        const maxDate = dates[dates.length - 1];
-        const samePeriod = (maxDate - minDate) <= 2 * 24 * 60 * 60 * 1000; // all within 2 days
-
-        if (samePeriod) {
-          const totalAmount = transactions.reduce((acc, t) => acc + t.amount, 0);
-          alerts.push({
-            id: `dup_${key}`,
-            type: 'duplicate',
-            severity: 'high',
-            title: 'Potential Duplicate Charge',
-            description: `${transactions.length} identical charges of ${CURRENCY_SYMBOL}${transactions[0].amount.toFixed(2)} at ${transactions[0].merchant}`,
-            amount: totalAmount,
-            transactions,
-            recommendation: 'Verify with your bank if these are legitimate charges.'
-          });
-        }
+        // Multiple identical charges on the same day is suspicious
+        const totalAmount = transactions.reduce((acc, t) => acc + t.amount, 0);
+        alerts.push({
+          id: `dup_${key}`,
+          type: 'duplicate',
+          severity: 'high',
+          title: 'Potential Duplicate Charge',
+          description: `${transactions.length} identical charges of ${CURRENCY_SYMBOL}${transactions[0].amount.toFixed(2)} at ${transactions[0].merchant} on the same day`,
+          amount: totalAmount,
+          transactions,
+          recommendation: 'Verify with your bank if these are legitimate charges.'
+        });
       }
     });
 

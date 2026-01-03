@@ -17,6 +17,7 @@ import { SavingSuggestions } from './SavingSuggestions';
 import { CategoryDeepDrill } from './CategoryDeepDrill';
 import { CreditUtilization } from './CreditUtilization';
 import { YearlySummary } from './YearlySummary';
+import { ChatBot } from './ChatBot';
 
 import { analyzeSpending } from '../services/geminiService';
 import ReactMarkdown from 'react-markdown';
@@ -281,6 +282,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onReset }) => {
         </Card>
 
       </main>
+
+      {/* AI Chatbot */}
+      <ChatBot transactions={data} />
     </div>
   );
 };

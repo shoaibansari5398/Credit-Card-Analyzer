@@ -21,15 +21,17 @@ export const ProcessingView: React.FC<ProcessingViewProps> = ({ progress }) => {
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-xs truncate">
             {progress.fileName}
           </p>
-          <div className="w-64 h-2 bg-gray-200 dark:bg-gray-700 rounded-full mt-3 overflow-hidden">
+          <div
+            className="w-64 h-2 bg-gray-200 dark:bg-gray-700 rounded-full mt-3 overflow-hidden"
+            role="progressbar"
+            aria-valuenow={progress.current}
+            aria-valuemin={0}
+            aria-valuemax={progress.total}
+            aria-label={`Processing file ${progress.current} of ${progress.total}`}
+          >
             <div
               className="h-full bg-emerald-500 transition-all duration-300"
               style={{ width: `${Math.min((progress.current / progress.total) * 100, 100)}%` }}
-              role="progressbar"
-              aria-valuenow={progress.current}
-              aria-valuemin={0}
-              aria-valuemax={progress.total}
-              aria-label={`Processing file ${progress.current} of ${progress.total}`}
             />
           </div>
         </div>

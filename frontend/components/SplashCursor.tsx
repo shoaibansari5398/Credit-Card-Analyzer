@@ -1100,7 +1100,6 @@ function SplashCursor({
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('touchstart', onTouchStart);
       window.removeEventListener('touchmove', onTouchMove);
-      window.removeEventListener('touchmove', onTouchMove);
       window.removeEventListener('touchend', onTouchEnd);
       document.body.removeEventListener('mousemove', handleFirstMouseMove);
       cancelAnimationFrame(updateFrameId);

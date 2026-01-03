@@ -20,8 +20,20 @@ export const parseStatementFile = async (file: File, password?: string): Promise
     });
 
     if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ detail: response.statusText }));
-        throw new Error(errorData.detail || `Server Error: ${response.status}`);
+        const errorText = await response.text();
+        let errorMessage = response.statusText;
+
+        try {
+            const errorJson = JSON.parse(errorText);
+            errorMessage = errorJson.detail || errorJson.message || errorMessage;
+        } catch (e) {
+            // If JSON parse fails, use the raw text (might be HTML or plain text)
+            // But limit length to avoid huge HTML dumps
+            errorMessage = errorText.substring(0, 200) || errorMessage;
+        }
+
+        console.error("API Error Response:", errorMessage);
+        throw new Error(errorMessage || `Server Error: ${response.status}`);
     }
 
     const rawData = await response.json();

@@ -28,7 +28,16 @@ app = FastAPI()
 
 # Configure CORS
 # Configure CORS
-ALLOWED_ORIGINS = json.loads(os.getenv("ALLOWED_ORIGINS", '["http://localhost:5173", "http://localhost:3000", "http://localhost:8000"]'))
+# Configure CORS
+try:
+    origins_str = os.getenv("ALLOWED_ORIGINS", '["http://localhost:5173", "http://localhost:3000", "http://localhost:8000"]')
+    if origins_str.strip().startswith("["):
+        ALLOWED_ORIGINS = json.loads(origins_str)
+    else:
+        ALLOWED_ORIGINS = [origin.strip() for origin in origins_str.split(",") if origin.strip()]
+except Exception as e:
+    print(f"Error parsing ALLOWED_ORIGINS: {e}")
+    ALLOWED_ORIGINS = ["http://localhost:5173", "http://localhost:3000"]
 
 app.add_middleware(
     CORSMiddleware,
@@ -37,6 +46,36 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+# Global Exception Handlers to ensure CORS headers are always present
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc):
+    print(f"Global Exception: {exc}")
+    return JSONResponse(
+        status_code=500,
+        content={"detail": f"Internal Server Error: {str(exc)}"},
+        headers={"Access-Control-Allow-Origin": "*"}
+    )
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request, exc):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
+        headers={"Access-Control-Allow-Origin": "*"}
+    )
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc):
+    return JSONResponse(
+        status_code=422,
+        content={"detail": str(exc)},
+        headers={"Access-Control-Allow-Origin": "*"}
+    )
 
 # Health check endpoint
 @app.get("/health")

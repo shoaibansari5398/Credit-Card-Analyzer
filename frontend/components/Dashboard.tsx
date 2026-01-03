@@ -63,7 +63,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onReset }) => {
     const months = new Set(data.filter(t => t.amount > 0).map(t => t.date.substring(0, 7)));
     const monthCount = months.size || 1;
 
-    const largestTx = sortedByAmt[0] ?? { amount: 0, merchant: 'N/A', category: '', date: '', description: '' };
+    const largestTx = sortedByAmt[0] ?? { id: 'fallback', amount: 0, merchant: 'N/A', category: '', date: '', description: '' };
 
     return {
       totalSpend,
@@ -94,7 +94,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onReset }) => {
     <div className="min-h-screen pb-20 bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       {/* HEADER */}
       <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10 transition-colors duration-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-auto sm:h-16 py-3 sm:py-0 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0">
           <div
             className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
             onClick={() => navigate('/')}
@@ -112,7 +112,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onReset }) => {
             </button>
             <button
               onClick={() => exportToCSV(data)}
-              className="bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-600 transition-colors shadow-sm cursor-pointer"
+              className="bg-emerald-500 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-emerald-600 transition-colors shadow-sm cursor-pointer whitespace-nowrap"
             >
               Export Report
             </button>
@@ -125,8 +125,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onReset }) => {
         {/* ============================================ */}
         {/* SECTION 1: STATS SUMMARY CARDS (Quick View) */}
         {/* ============================================ */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-          <div className="lg:col-span-3 grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
+          <div className="lg:col-span-3 grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
             <KPICard
               label="Total Spend"
               value={`${CURRENCY_SYMBOL}${stats.totalSpend.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import { Transaction } from './types';
 import { LandingPage } from './components/LandingPage';
@@ -8,6 +8,8 @@ import { ProcessingView } from './components/ProcessingView';
 import { parseStatementFile } from './services/parsingService';
 import { generateMockData } from './utils/mockData';
 import { PasswordModal } from './components/ui/PasswordModal';
+
+const API_TIMEOUT_MS = 60000; // 60 seconds
 
 export const App: React.FC = () => {
   const navigate = useNavigate();
@@ -26,6 +28,21 @@ export const App: React.FC = () => {
   // Store files and password for processing
   const pendingFilesRef = useRef<File[]>([]);
   const storedPasswordRef = useRef<string>('');
+
+  // Auto-reset if processing takes too long (60 seconds)
+  useEffect(() => {
+    if (!isProcessing) return;
+
+    const timeoutId = setTimeout(() => {
+      console.warn('Processing timeout - resetting UI');
+      setIsProcessing(false);
+      setError('Request timed out. Please try again.');
+      setProcessingProgress({ current: 0, total: 0, fileName: '' });
+      navigate('/upload');
+    }, API_TIMEOUT_MS);
+
+    return () => clearTimeout(timeoutId);
+  }, [isProcessing, navigate]);
 
   const processFilesWithPassword = async (files: File[], password: string) => {
     setIsProcessing(true);

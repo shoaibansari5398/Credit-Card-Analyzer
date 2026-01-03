@@ -125,27 +125,27 @@ export const MerchantBreakdown: React.FC<MerchantBreakdownProps> = ({ data }) =>
       {viewMode === 'chart' && (
         <div className="h-64 mb-4">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={chartDisplayMerchants}
-              layout="vertical"
-              margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="var(--chart-grid)" />
-              <XAxis
-                type="number"
-                tick={{ fontSize: 10, fill: 'var(--chart-axis)' }}
-                tickFormatter={(v) => `${CURRENCY_SYMBOL}${(v/1000).toFixed(0)}k`}
-                axisLine={{ stroke: 'var(--chart-grid)' }}
-                tickLine={false}
-              />
-              <YAxis
-                type="category"
-                dataKey="name"
-                tick={{ fontSize: 11, fill: 'var(--chart-axis)' }}
-                width={95}
-                axisLine={false}
-                tickLine={false}
-              />
+              <BarChart
+                data={chartDisplayMerchants}
+                layout="vertical"
+                margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="var(--chart-grid)" />
+                <XAxis
+                  type="number"
+                  tick={{ fontSize: 10, fill: 'var(--chart-axis)' }}
+                  tickFormatter={(v) => `${CURRENCY_SYMBOL}${(v/1000).toFixed(0)}k`}
+                  axisLine={{ stroke: 'var(--chart-grid)' }}
+                  tickLine={false}
+                />
+                <YAxis
+                  type="category"
+                  dataKey="name"
+                  tick={{ fontSize: 10, fill: 'var(--chart-axis)' }}
+                  width={90}
+                  axisLine={false}
+                  tickLine={false}
+                />
               <Tooltip content={<CustomTooltip />} cursor={{ fill: 'transparent' }} />
               <Bar dataKey="amount" radius={[0, 4, 4, 0]}>
                 {chartDisplayMerchants.map((entry, index) => (

@@ -1,17 +1,4 @@
 import { Transaction } from "../types";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-const CHAT_SYSTEM_INSTRUCTION = `You are a helpful financial assistant that analyzes credit card transaction data.
-You have access to the user's transaction history and can answer questions about their spending patterns.
-
-When answering questions:
-1. Be concise and direct
-2. Use specific numbers and percentages when relevant
-3. Reference actual merchants and categories from the data
-4. Format currency with ₹ symbol
-5. Use markdown for better readability
-
-If the user asks something you cannot determine from the data, politely explain what information is available.`;
 
 // Build context from transaction data
 const buildTransactionContext = (transactions: Transaction[]): string => {
@@ -86,36 +73,30 @@ ${transactions.slice(-20).map(t => `${t.date}: ${t.merchant} - ₹${t.amount} [$
 `;
 };
 
-// Call Gemini API for chat
-const callGeminiChat = async (
+// Call backend chat API (proxies to Gemini)
+const callChatApi = async (
   userMessage: string,
   transactionContext: string,
   conversationHistory: { role: 'user' | 'assistant'; content: string }[]
 ): Promise<string> => {
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+  const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
-  // Build conversation context
-  const historyText = conversationHistory
-    .slice(-10)
-    .map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`)
-    .join('\n\n');
+  const response = await fetch(`${apiBaseUrl}/api/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      message: userMessage,
+      transactionContext,
+      conversationHistory
+    })
+  });
 
-  const prompt = `${CHAT_SYSTEM_INSTRUCTION}
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status}`);
+  }
 
-Here is the user's transaction data for context:
-${transactionContext}
-
-Previous conversation:
-${historyText}
-
-User's current question: ${userMessage}
-
-Please respond helpfully based on the transaction data above.`;
-
-  const result = await model.generateContent(prompt);
-  const response = await result.response;
-  return response.text() || "I couldn't process your request. Please try again.";
+  const data = await response.json();
+  return data.response || "I couldn't process your request. Please try again.";
 };
 
 export const sendChatMessage = async (
@@ -124,13 +105,8 @@ export const sendChatMessage = async (
   conversationHistory: { role: 'user' | 'assistant'; content: string }[]
 ): Promise<string> => {
   try {
-    if (!process.env.GEMINI_API_KEY) {
-      return "⚠️ **API Key Missing**\n\nPlease set `GEMINI_API_KEY` in your .env file to enable the chatbot.";
-    }
-
     const context = buildTransactionContext(transactions);
-    const response = await callGeminiChat(userMessage, context, conversationHistory);
-
+    const response = await callChatApi(userMessage, context, conversationHistory);
     return response;
   } catch (error) {
     console.error("Chat Error:", error);

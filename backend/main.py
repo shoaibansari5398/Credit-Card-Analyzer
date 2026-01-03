@@ -139,6 +139,11 @@ def call_gemini(extracted_text: str) -> str | None:
         return None
 
     print(f"Calling Gemini API with model: {GEMINI_MODEL}")
+
+    # Warn if text will be truncated
+    if len(extracted_text) > 30000:
+        print(f"Warning: Text truncated from {len(extracted_text)} to 30000 characters. Some transactions may be missed.")
+
     try:
         response = requests.post(
             f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}",
@@ -163,7 +168,12 @@ def call_gemini(extracted_text: str) -> str | None:
 
         if response.status_code == 200:
             ai_data = response.json()
-            return ai_data['candidates'][0]['content']['parts'][0]['text']
+            try:
+                return ai_data['candidates'][0]['content']['parts'][0]['text']
+            except (KeyError, IndexError, TypeError) as e:
+                print(f"Gemini response parsing error: {str(e)}")
+                print(f"Response structure: {ai_data}")
+                return None
         else:
             print(f"Gemini Error {response.status_code}: {response.text}")
             return None
@@ -291,3 +301,162 @@ async def analyze_statement(
         if 'extracted_text' in dir():
             del extracted_text
         gc.collect()
+
+
+# ============ Chat API (Gemini Proxy) ============
+
+CHAT_SYSTEM_INSTRUCTION = """You are a helpful financial assistant that analyzes credit card transaction data.
+You have access to the user's transaction history and can answer questions about their spending patterns.
+
+When answering questions:
+1. Be concise and direct
+2. Use specific numbers and percentages when relevant
+3. Reference actual merchants and categories from the data
+4. Format currency with the appropriate symbol
+5. Use markdown for better readability
+
+If the user asks something you cannot determine from the data, politely explain what information is available."""
+
+
+class ChatRequest(BaseModel):
+    message: str
+    transactionContext: str
+    conversationHistory: list = []
+
+
+@app.post("/api/chat")
+async def chat_endpoint(request: ChatRequest):
+    if not GEMINI_API_KEY:
+        raise HTTPException(status_code=500, detail="Missing GEMINI_API_KEY")
+
+    # Limit context size to prevent API errors and excessive costs
+    MAX_CONTEXT_SIZE = 50000  # characters
+    if len(request.transactionContext) > MAX_CONTEXT_SIZE:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Transaction context too large. Maximum {MAX_CONTEXT_SIZE} characters."
+        )
+
+    if len(request.message) > 2000:
+        raise HTTPException(status_code=400, detail="Message too long. Maximum 2000 characters.")
+
+    try:
+        # Build conversation context
+        history_text = "\n\n".join([
+            f"{'User' if m.get('role') == 'user' else 'Assistant'}: {m.get('content', '')}"
+            for m in request.conversationHistory[-10:]
+        ])
+
+        prompt = f"""{CHAT_SYSTEM_INSTRUCTION}
+
+Here is the user's transaction data for context:
+{request.transactionContext}
+
+Previous conversation:
+{history_text}
+
+User's current question: {request.message}
+
+Please respond helpfully based on the transaction data above."""
+
+        response = requests.post(
+            f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}",
+            headers={"Content-Type": "application/json"},
+            json={
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {"temperature": 0.7, "maxOutputTokens": 1024}
+            },
+            timeout=60
+        )
+
+        if response.status_code == 200:
+            ai_data = response.json()
+            try:
+                return {"response": ai_data['candidates'][0]['content']['parts'][0]['text']}
+            except (KeyError, IndexError, TypeError) as e:
+                print(f"Gemini Chat parsing error: {str(e)}")
+                raise HTTPException(status_code=500, detail="Invalid AI response format")
+        else:
+            print(f"Gemini Chat Error: {response.text}")
+            raise HTTPException(status_code=500, detail="AI service error")
+
+    except Exception as e:
+        print(f"Chat Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============ Insights API (Gemini Proxy) ============
+
+INSIGHTS_SYSTEM_INSTRUCTION = """You are a savvy financial analyst. Your goal is to provide a brief, high-impact "Financial Story" based on credit card data.
+Focus on 3 things:
+1. Spending Velocity (Are they accelerating spend?).
+2. Anomaly Detection (Any weird large purchases?).
+3. One actionable tip to save money based on their top category.
+Keep the tone professional but conversational. Limit response to 150 words. Format with Markdown."""
+
+
+class InsightsRequest(BaseModel):
+    stats: dict
+    topTransactions: list
+
+
+@app.post("/api/insights")
+async def insights_endpoint(request: InsightsRequest):
+    if not GEMINI_API_KEY:
+        raise HTTPException(status_code=500, detail="Missing GEMINI_API_KEY")
+
+    # Validate topTransactions size
+    if len(request.topTransactions) > 100:
+        raise HTTPException(
+            status_code=400,
+            detail="Too many transactions. Maximum 100 allowed."
+        )
+
+    # Validate stats structure
+    required_keys = ['totalSpend', 'burnRate', 'topCategory', 'largestTx']
+    if not all(key in request.stats for key in required_keys):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Missing required stats fields: {required_keys}"
+        )
+
+    try:
+        stats = request.stats
+        top_tx = request.topTransactions
+
+        prompt_data = f"""
+Total Spend: {stats.get('totalSpend', 0):.2f}
+Daily Burn Rate: {stats.get('burnRate', 0):.2f}
+Top Category: {stats.get('topCategory', {}).get('name', 'Unknown')} ({stats.get('topCategory', {}).get('percentage', 0):.1f}%)
+Largest Transaction: {stats.get('largestTx', {}).get('merchant', 'Unknown')} for {stats.get('largestTx', {}).get('amount', 0)}
+
+Recent Large Transactions:
+{chr(10).join([f"- {t.get('date')}: {t.get('merchant')} ({t.get('amount')}) [{t.get('category')}]" for t in top_tx[:5]])}
+"""
+
+        prompt = f"{INSIGHTS_SYSTEM_INSTRUCTION}\n\nAnalyze these spending metrics:\n{prompt_data}"
+
+        response = requests.post(
+            f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}",
+            headers={"Content-Type": "application/json"},
+            json={
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {"temperature": 0.7, "maxOutputTokens": 512}
+            },
+            timeout=60
+        )
+
+        if response.status_code == 200:
+            ai_data = response.json()
+            try:
+                return {"insights": ai_data['candidates'][0]['content']['parts'][0]['text']}
+            except (KeyError, IndexError, TypeError) as e:
+                print(f"Gemini Insights parsing error: {str(e)}")
+                raise HTTPException(status_code=500, detail="Invalid AI response format")
+        else:
+            print(f"Gemini Insights Error: {response.text}")
+            raise HTTPException(status_code=500, detail="AI service error")
+
+    except Exception as e:
+        print(f"Insights Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))

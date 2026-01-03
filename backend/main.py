@@ -37,11 +37,11 @@ try:
         ALLOWED_ORIGINS = [origin.strip() for origin in origins_str.split(",") if origin.strip()]
 except Exception as e:
     print(f"Error parsing ALLOWED_ORIGINS: {e}")
-    ALLOWED_ORIGINS = ["http://localhost:5173", "http://localhost:3000"]
+    ALLOWED_ORIGINS = ["*"]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
+    allow_origins=["*"], # Allow ALL origins for now to fix the blocking issue
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

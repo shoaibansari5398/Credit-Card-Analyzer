@@ -23,10 +23,17 @@ try:
     limiter = Limiter(key_func=get_remote_address)
     RATE_LIMIT_ENABLED = True
 except ImportError:
-    # slowapi not installed - rate limiting disabled
     limiter = None
     RATE_LIMIT_ENABLED = False
     print("Warning: slowapi not installed. Rate limiting is disabled. Install with: pip install slowapi")
+
+def rate_limit(limit_string: str):
+    """Conditional rate limit decorator - only applies if slowapi is installed."""
+    def decorator(func):
+        if RATE_LIMIT_ENABLED and limiter:
+            return limiter.limit(limit_string)(func)
+        return func
+    return decorator
 
 # Sanitize helper
 def sanitize_text(text: str) -> str:
@@ -131,18 +138,18 @@ class ContactRequest(BaseModel):
     description: str
 
 @app.post("/contact")
-@limiter.limit("5/minute") if RATE_LIMIT_ENABLED else lambda f: f
-async def contact_support(request: ContactRequest, req: Request):
-    print(f"Received contact request: {request}")
+@rate_limit("5/minute")
+async def contact_support(contact_request: ContactRequest, request: Request):
+    print(f"Received contact request: {contact_request}")
 
     # Sanitize inputs
-    safe_category = sanitize_text(request.category)
-    safe_name = sanitize_text(request.name)
-    safe_email = sanitize_text(request.email)
+    safe_category = sanitize_text(contact_request.category)
+    safe_name = sanitize_text(contact_request.name)
+    safe_email = sanitize_text(contact_request.email)
     # Description needs to allow newlines for the body, but should be careful?
     # Actually, for the body it is fine, but we should ensure no header injection via body if that's even possible (unlikely in MIMEText).
     # But CodeRabbit suggested removing \r.
-    safe_description = request.description.replace('\r', '')
+    safe_description = contact_request.description.replace('\r', '')
 
     # 1. Check if SMTP is configured
     if not SMTP_USERNAME or not SMTP_PASSWORD:
@@ -280,9 +287,9 @@ def parse_json_response(content: str) -> list:
 
 
 @app.post("/analyze")
-@limiter.limit("10/minute") if RATE_LIMIT_ENABLED else lambda f: f
+@rate_limit("10/minute")
 async def analyze_statement(
-    req: Request,
+    request: Request,
     file: UploadFile = File(...),
     password: str = Form(None)
 ):
@@ -409,38 +416,38 @@ class ChatRequest(BaseModel):
 
 
 @app.post("/api/chat")
-@limiter.limit("30/minute") if RATE_LIMIT_ENABLED else lambda f: f
-async def chat_endpoint(request: ChatRequest, req: Request):
+@rate_limit("30/minute")
+async def chat_endpoint(chat_request: ChatRequest, request: Request):
     if not GEMINI_API_KEY:
         raise HTTPException(status_code=500, detail="Missing GEMINI_API_KEY")
 
     # Limit context size to prevent API errors and excessive costs
     MAX_CONTEXT_SIZE = 50000  # characters
-    if len(request.transactionContext) > MAX_CONTEXT_SIZE:
+    if len(chat_request.transactionContext) > MAX_CONTEXT_SIZE:
         raise HTTPException(
             status_code=400,
             detail=f"Transaction context too large. Maximum {MAX_CONTEXT_SIZE} characters."
         )
 
-    if len(request.message) > 2000:
+    if len(chat_request.message) > 2000:
         raise HTTPException(status_code=400, detail="Message too long. Maximum 2000 characters.")
 
     try:
         # Build conversation context
         history_text = "\n\n".join([
             f"{'User' if m.get('role') == 'user' else 'Assistant'}: {m.get('content', '')}"
-            for m in request.conversationHistory[-10:]
+            for m in chat_request.conversationHistory[-10:]
         ])
 
         prompt = f"""{CHAT_SYSTEM_INSTRUCTION}
 
 Here is the user's transaction data for context:
-{request.transactionContext}
+{chat_request.transactionContext}
 
 Previous conversation:
 {history_text}
 
-User's current question: {request.message}
+User's current question: {chat_request.message}
 
 Please respond helpfully based on the transaction data above."""
 
@@ -486,13 +493,13 @@ class InsightsRequest(BaseModel):
 
 
 @app.post("/api/insights")
-@limiter.limit("20/minute") if RATE_LIMIT_ENABLED else lambda f: f
-async def insights_endpoint(request: InsightsRequest, req: Request):
+@rate_limit("20/minute")
+async def insights_endpoint(insights_request: InsightsRequest, request: Request):
     if not GEMINI_API_KEY:
         raise HTTPException(status_code=500, detail="Missing GEMINI_API_KEY")
 
     # Validate topTransactions size
-    if len(request.topTransactions) > 100:
+    if len(insights_request.topTransactions) > 100:
         raise HTTPException(
             status_code=400,
             detail="Too many transactions. Maximum 100 allowed."
@@ -500,15 +507,15 @@ async def insights_endpoint(request: InsightsRequest, req: Request):
 
     # Validate stats structure
     required_keys = ['totalSpend', 'burnRate', 'topCategory', 'largestTx']
-    if not all(key in request.stats for key in required_keys):
+    if not all(key in insights_request.stats for key in required_keys):
         raise HTTPException(
             status_code=400,
             detail=f"Missing required stats fields: {required_keys}"
         )
 
     try:
-        stats = request.stats
-        top_tx = request.topTransactions
+        stats = insights_request.stats
+        top_tx = insights_request.topTransactions
 
         prompt_data = f"""
 Total Spend: {stats.get('totalSpend', 0):.2f}

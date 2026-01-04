@@ -22,9 +22,7 @@ import { ChatBot } from './ChatBot';
 import { analyzeSpending } from '../services/geminiService';
 import ReactMarkdown from 'react-markdown';
 import { exportToCSV } from '../utils/exportUtils';
-
-// Currency symbol - change this for different regions (e.g., '₹', '€', '£')
-const CURRENCY_SYMBOL = '₹';
+import { CURRENCY_SYMBOL } from '../config/constants';
 
 interface DashboardProps {
   data: Transaction[];
@@ -94,13 +92,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onReset }) => {
     <div className="min-h-screen pb-20 bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       {/* HEADER */}
       <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10 transition-colors duration-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-auto sm:h-16 py-3 sm:py-0 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-auto sm:h-16 py-3 sm:py-0 flex flex-row items-center justify-between gap-3 sm:gap-0">
           <div
             className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
             onClick={() => navigate('/')}
           >
             <span className="bg-emerald-500 text-white p-1.5 rounded-lg font-bold text-lg">CC</span>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">Insight Analyzer</h1>
+            <h1 className="hidden sm:block text-xl font-bold text-gray-900 dark:text-white tracking-tight">Insight Analyzer</h1>
           </div>
           <div className="flex items-center gap-4">
              <ThemeToggle />
@@ -130,13 +128,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ data, onReset }) => {
             <KPICard
               label="Total Spend"
               value={`${CURRENCY_SYMBOL}${stats.totalSpend.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
-              subValue="All transactions"
               trend="neutral"
             />
              <KPICard
               label="Daily Average"
               value={`${CURRENCY_SYMBOL}${stats.burnRate.toFixed(0)}`}
-              subValue="Per day spend"
               trend="neutral"
             />
              <KPICard

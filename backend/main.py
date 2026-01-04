@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, Form, HTTPException
+from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 import pikepdf
 import pdfplumber
@@ -15,6 +15,19 @@ from pydantic import BaseModel, EmailStr, ValidationError
 from dotenv import load_dotenv
 from security_utils import mask_transaction_pii, scrub_sensitive_data
 
+# Rate limiting
+try:
+    from slowapi import Limiter, _rate_limit_exceeded_handler
+    from slowapi.util import get_remote_address
+    from slowapi.errors import RateLimitExceeded
+    limiter = Limiter(key_func=get_remote_address)
+    RATE_LIMIT_ENABLED = True
+except ImportError:
+    # slowapi not installed - rate limiting disabled
+    limiter = None
+    RATE_LIMIT_ENABLED = False
+    print("Warning: slowapi not installed. Rate limiting is disabled. Install with: pip install slowapi")
+
 # Sanitize helper
 def sanitize_text(text: str) -> str:
     """Remove potentially problematic characters from text to prevent injection."""
@@ -25,6 +38,11 @@ def sanitize_text(text: str) -> str:
 load_dotenv(dotenv_path="../.env")
 
 app = FastAPI()
+
+# Add rate limiter to app state if available
+if RATE_LIMIT_ENABLED and limiter:
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Configure CORS
 # Configure CORS
@@ -53,14 +71,23 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+def get_cors_origin(request) -> str:
+    """Get appropriate CORS origin from request, validated against allowed origins."""
+    origin = request.headers.get("origin", "")
+    if origin in ALLOWED_ORIGINS:
+        return origin
+    # Fallback to first allowed origin for non-browser requests
+    return ALLOWED_ORIGINS[0] if ALLOWED_ORIGINS else ""
+
 # Global Exception Handlers to ensure CORS headers are always present
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
+    # Log full error internally, but don't expose to client
     print(f"Global Exception: {exc}")
     return JSONResponse(
         status_code=500,
-        content={"detail": f"Internal Server Error: {str(exc)}"},
-        headers={"Access-Control-Allow-Origin": "*"}
+        content={"detail": "An internal server error occurred. Please try again."},
+        headers={"Access-Control-Allow-Origin": get_cors_origin(request)}
     )
 
 @app.exception_handler(StarletteHTTPException)
@@ -68,15 +95,15 @@ async def http_exception_handler(request, exc):
     return JSONResponse(
         status_code=exc.status_code,
         content={"detail": exc.detail},
-        headers={"Access-Control-Allow-Origin": "*"}
+        headers={"Access-Control-Allow-Origin": get_cors_origin(request)}
     )
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
     return JSONResponse(
         status_code=422,
-        content={"detail": str(exc)},
-        headers={"Access-Control-Allow-Origin": "*"}
+        content={"detail": "Invalid request data. Please check your input."},
+        headers={"Access-Control-Allow-Origin": get_cors_origin(request)}
     )
 
 # Root endpoint for easy connectivity check
@@ -104,7 +131,8 @@ class ContactRequest(BaseModel):
     description: str
 
 @app.post("/contact")
-async def contact_support(request: ContactRequest):
+@limiter.limit("5/minute") if RATE_LIMIT_ENABLED else lambda f: f
+async def contact_support(request: ContactRequest, req: Request):
     print(f"Received contact request: {request}")
 
     # Sanitize inputs
@@ -163,7 +191,10 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 # Gemini model - Using Gemini 2.0 Flash for fast, quality responses
 GEMINI_MODEL = "gemini-2.0-flash"
 
-SYSTEM_PROMPT = """
+# Transaction categories - must match frontend/config/constants.ts
+TRANSACTION_CATEGORIES = ['Food', 'Transport', 'Shopping', 'Utilities', 'Entertainment', 'Health', 'Travel', 'Other']
+
+SYSTEM_PROMPT = f"""
 You are a specialized data extraction AI.
 Analyze the provided text from a Credit Card Statement and extract all transactions.
 
@@ -171,7 +202,7 @@ Return the data as a JSON array where each object has:
 - date: ISO 8601 format (YYYY-MM-DD). If year is missing, try to infer from context or use current year.
 - merchant: The clean name of the merchant (remove locations/codes like 'UBER *trip 2452').
 - amount: The numeric value. Positive for expenses, negative for payments/credits.
-- category: Classify into one of: Food, Transport, Shopping, Utilities, Entertainment, Health, Travel, Other.
+- category: Classify into one of: {', '.join(TRANSACTION_CATEGORIES)}.
 - isRecurring: Boolean, true if it looks like a subscription.
 
 If the text contains no transactions, return an empty array.
@@ -249,7 +280,9 @@ def parse_json_response(content: str) -> list:
 
 
 @app.post("/analyze")
+@limiter.limit("10/minute") if RATE_LIMIT_ENABLED else lambda f: f
 async def analyze_statement(
+    req: Request,
     file: UploadFile = File(...),
     password: str = Form(None)
 ):
@@ -331,12 +364,17 @@ async def analyze_statement(
         return masked_transactions
 
     except pikepdf.PdfError as e:
-        raise HTTPException(status_code=400, detail=f"Invalid PDF: {str(e)}")
+        print(f"PDF Error: {str(e)}")
+        raise HTTPException(status_code=400, detail="Invalid or corrupted PDF file.")
     except json.JSONDecodeError as e:
-        raise HTTPException(status_code=500, detail=f"Failed to parse AI response as JSON: {str(e)}")
+        print(f"JSON Parse Error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to process the document. Please try again.")
+    except HTTPException:
+        # Let HTTPExceptions pass through (e.g., password errors, file size)
+        raise
     except Exception as e:
         print(f"Server Error: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An unexpected error occurred. Please try again.")
     finally:
         if 'file_bytes' in dir():
             del file_bytes
@@ -371,7 +409,8 @@ class ChatRequest(BaseModel):
 
 
 @app.post("/api/chat")
-async def chat_endpoint(request: ChatRequest):
+@limiter.limit("30/minute") if RATE_LIMIT_ENABLED else lambda f: f
+async def chat_endpoint(request: ChatRequest, req: Request):
     if not GEMINI_API_KEY:
         raise HTTPException(status_code=500, detail="Missing GEMINI_API_KEY")
 
@@ -447,7 +486,8 @@ class InsightsRequest(BaseModel):
 
 
 @app.post("/api/insights")
-async def insights_endpoint(request: InsightsRequest):
+@limiter.limit("20/minute") if RATE_LIMIT_ENABLED else lambda f: f
+async def insights_endpoint(request: InsightsRequest, req: Request):
     if not GEMINI_API_KEY:
         raise HTTPException(status_code=500, detail="Missing GEMINI_API_KEY")
 

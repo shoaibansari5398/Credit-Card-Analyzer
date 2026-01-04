@@ -40,12 +40,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onUseDem
             >
                 Contact Us
             </button>
-            <button onClick={onUseDemo} className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer">
+            <button onClick={onUseDemo} className="hidden sm:block text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer">
                 Demo
             </button>
             <button
                 onClick={onGetStarted}
-                className="bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold py-2.5 px-5 rounded-lg transition-all shadow-sm hover:shadow-md cursor-pointer"
+                className="hidden sm:block bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold py-2.5 px-5 rounded-lg transition-all shadow-sm hover:shadow-md cursor-pointer"
             >
                 Get Started
             </button>
@@ -58,7 +58,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onUseDem
       <SplashCursor />
 
       {/* Hero Section */}
-      <main className="relative z-10 flex-grow flex flex-col items-center justify-center text-center px-4 -mt-10">
+      <main className="relative z-10 flex-grow flex flex-col items-center justify-center text-center px-4 mt-4 sm:-mt-10">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium mb-8 border border-emerald-100 animate-slide-up" style={{ animationDelay: '0.1s' }}>
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
             100% Privacy-First • Local Processing
@@ -74,7 +74,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onUseDem
                 radius={100}
                 falloff='linear'
             />
-            <div className="text-emerald-500">
+            <div className="text-emerald-500 my-1">
                 <VariableProximity
                     label={'Financial Story'}
                     className={'block'}

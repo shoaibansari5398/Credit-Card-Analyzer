@@ -27,10 +27,10 @@ export const KPICard: React.FC<{ label: string; value: string; subValue?: string
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
       <h3 className="text-gray-500 dark:text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">{label}</h3>
-      <div className="flex items-end gap-2">
+      <div className="flex flex-col items-start gap-1">
         <span className="text-2xl font-bold text-gray-900 dark:text-white">{value}</span>
         {subValue && (
-          <span className={`text-xs mb-1 font-medium px-1.5 py-0.5 rounded ${
+          <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${
             trend === 'up' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
             trend === 'down' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
             'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'

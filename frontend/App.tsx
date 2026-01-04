@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
+import { Routes, Route, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { Transaction } from './types';
 import { LandingPage } from './components/LandingPage';
 import { Dashboard } from './components/Dashboard';
@@ -9,10 +9,12 @@ import { parseStatementFile } from './services/parsingService';
 import { generateMockData } from './utils/mockData';
 import { PasswordModal } from './components/ui/PasswordModal';
 
-const API_TIMEOUT_MS = 60000; // 60 seconds
+// Note: Individual API calls have their own 120-second timeout in parsingService.ts
+// A global timeout is not needed and caused false errors during multi-file processing
 
 export const App: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [data, setData] = useState<Transaction[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,20 +31,13 @@ export const App: React.FC = () => {
   const pendingFilesRef = useRef<File[]>([]);
   const storedPasswordRef = useRef<string>('');
 
-  // Auto-reset if processing takes too long (60 seconds)
+  // Redirect to home on page refresh if on protected routes without data
   useEffect(() => {
-    if (!isProcessing) return;
-
-    const timeoutId = setTimeout(() => {
-      console.warn('Processing timeout - resetting UI');
-      setIsProcessing(false);
-      setError('Request timed out. Please try again.');
-      setProcessingProgress({ current: 0, total: 0, fileName: '' });
-      navigate('/upload');
-    }, API_TIMEOUT_MS);
-
-    return () => clearTimeout(timeoutId);
-  }, [isProcessing, navigate]);
+    const protectedRoutes = ['/dashboard', '/processing'];
+    if (protectedRoutes.includes(location.pathname) && data.length === 0 && !isProcessing) {
+      navigate('/', { replace: true });
+    }
+  }, []);
 
   const processFilesWithPassword = async (files: File[], password: string) => {
     setIsProcessing(true);

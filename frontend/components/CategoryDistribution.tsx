@@ -1,8 +1,7 @@
 import React, { useMemo } from 'react';
 import { Transaction } from '../types';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-
-const CURRENCY_SYMBOL = '₹';
+import { CURRENCY_SYMBOL } from '../config/constants';
 
 interface CategoryDistributionProps {
   data: Transaction[];

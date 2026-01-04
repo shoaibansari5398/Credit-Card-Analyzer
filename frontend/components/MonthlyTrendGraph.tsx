@@ -1,8 +1,7 @@
 import React, { useMemo } from 'react';
 import { Transaction } from '../types';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
-
-const CURRENCY_SYMBOL = '₹';
+import { CURRENCY_SYMBOL } from '../config/constants';
 
 interface MonthlyTrendGraphProps {
   data: Transaction[];

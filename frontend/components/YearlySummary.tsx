@@ -1,8 +1,7 @@
 import React, { useMemo } from 'react';
 import { Transaction } from '../types';
 import { exportToCSV } from '../utils/exportUtils';
-
-const CURRENCY_SYMBOL = '₹';
+import { CURRENCY_SYMBOL } from '../config/constants';
 
 interface YearlySummaryProps {
   data: Transaction[];

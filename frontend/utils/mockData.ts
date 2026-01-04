@@ -1,6 +1,6 @@
 import { Transaction } from "../types";
+import { TRANSACTION_CATEGORIES } from "../config/constants";
 
-const CATEGORIES = ['Food', 'Transport', 'Shopping', 'Utilities', 'Entertainment', 'Health', 'Travel'];
 const MERCHANTS: Record<string, string[]> = {
   Food: ['Uber Eats', 'Swiggy', 'Zomato', 'Starbucks', 'Local Grocer', 'Whole Foods'],
   Transport: ['Uber', 'Lyft', 'Shell Station', 'Metro Pass', 'Parking'],
@@ -10,6 +10,9 @@ const MERCHANTS: Record<string, string[]> = {
   Health: ['CVS Pharmacy', 'Doctor Visit', 'Gym Membership'],
   Travel: ['Delta Airlines', 'Airbnb', 'Hotel Inn', 'Expedia']
 };
+
+// Filter out 'Other' and categories without merchant mappings for mock data generation
+const CATEGORIES = TRANSACTION_CATEGORIES.filter(c => c !== 'Other' && c in MERCHANTS);
 
 export const generateMockData = (): Transaction[] => {
   const transactions: Transaction[] = [];
@@ -24,13 +27,13 @@ export const generateMockData = (): Transaction[] => {
     const category = CATEGORIES[catIndex];
     const merchantList = MERCHANTS[category];
     const merchant = merchantList[Math.floor(Math.random() * merchantList.length)];
-    
+
     // Weighted random amount
     let amount = Math.floor(Math.random() * 100) + 5;
     if (category === 'Travel' || category === 'Shopping') {
       if (Math.random() > 0.8) amount += 400; // Occasional large purchase
     }
-    
+
     // Simulate recurring
     const isRecurring = (merchant === 'Netflix' || merchant === 'Spotify' || merchant === 'Gym Membership');
 

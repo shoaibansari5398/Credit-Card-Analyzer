@@ -1,8 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Transaction } from '../types';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
-
-const CURRENCY_SYMBOL = '₹';
+import { CURRENCY_SYMBOL } from '../config/constants';
 
 interface CategoryDeepDrillProps {
   data: Transaction[];

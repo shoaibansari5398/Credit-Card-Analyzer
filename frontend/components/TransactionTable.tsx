@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Transaction } from '../types';
-
-const CURRENCY_SYMBOL = '₹';
+import { CURRENCY_SYMBOL } from '../config/constants';
 
 interface TransactionTableProps {
   transactions: Transaction[];

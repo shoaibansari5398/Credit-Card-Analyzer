@@ -1,8 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Transaction } from '../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-
-const CURRENCY_SYMBOL = '₹';
+import { CURRENCY_SYMBOL } from '../config/constants';
 
 interface MerchantBreakdownProps {
   data: Transaction[];

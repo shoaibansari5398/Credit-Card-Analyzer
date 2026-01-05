@@ -8,9 +8,7 @@ import requests
 import json
 import time
 import gc
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import resend
 from pydantic import BaseModel, EmailStr, ValidationError
 from dotenv import load_dotenv
 from security_utils import mask_transaction_pii, scrub_sensitive_data
@@ -123,13 +121,13 @@ async def root():
 async def health_check():
     return {"status": "healthy", "timestamp": time.time()}
 
-# Email Configuration
-SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.gmail.com")
-SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
-SMTP_USERNAME = os.getenv("SMTP_USERNAME")
-SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
-SENDER_EMAIL = os.getenv("SENDER_EMAIL", SMTP_USERNAME)
-RECIPIENT_EMAIL = os.getenv("RECIPIENT_EMAIL", SMTP_USERNAME)
+# Email Configuration (Resend)
+RESEND_API_KEY = os.getenv("RESEND_API_KEY")
+SENDER_EMAIL = os.getenv("SENDER_EMAIL", "onboarding@resend.dev")  # Use verified domain in production
+RECIPIENT_EMAIL = os.getenv("RECIPIENT_EMAIL")
+
+if RESEND_API_KEY:
+    resend.api_key = RESEND_API_KEY
 
 class ContactRequest(BaseModel):
     category: str
@@ -151,47 +149,45 @@ async def contact_support(contact_request: ContactRequest, request: Request):
     # But CodeRabbit suggested removing \r.
     safe_description = contact_request.description.replace('\r', '')
 
-    # 1. Check if SMTP is configured
-    if not SMTP_USERNAME or not SMTP_PASSWORD:
-        print("SMTP credentials not found. simulating email send.")
-        # REDACTED LOGGING
+    # 1. Check if Resend is configured
+    if not RESEND_API_KEY or not RECIPIENT_EMAIL:
+        print("Resend API key or recipient not configured. Simulating email send.")
         print(f"Would send email to {RECIPIENT_EMAIL} from {safe_email} about {safe_category}")
         return {"status": "success", "message": "Support request received (Simulation)"}
 
-    # 2. Construct Email
+    # 2. Send Email via Resend
     try:
-        msg = MIMEMultipart()
-        msg['From'] = SENDER_EMAIL
-        msg['To'] = RECIPIENT_EMAIL
-        msg['Subject'] = f"New Support Request: {safe_category}"
-        msg['Reply-To'] = safe_email
+        email_body = f"""<h2>New Contact Request</h2>
+<p><strong>Category:</strong> {safe_category}</p>
+<p><strong>Name:</strong> {safe_name}</p>
+<p><strong>Email:</strong> {safe_email}</p>
+<hr>
+<p><strong>Description:</strong></p>
+<p>{safe_description.replace(chr(10), '<br>')}</p>
+"""
 
-        body = f"""
-        New Contact Request
-        ------------------
-        Category: {safe_category}
-        Name: {safe_name}
-        Email: {safe_email}
+        params = {
+            "from": SENDER_EMAIL,
+            "to": [RECIPIENT_EMAIL],
+            "subject": f"New Support Request: {safe_category}",
+            "html": email_body,
+            "reply_to": safe_email
+        }
 
-        Description:
-        {safe_description}
-        """
-        msg.attach(MIMEText(body, 'plain'))
-
-        # 3. Send Email
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-            server.starttls()
-            server.login(SMTP_USERNAME, SMTP_PASSWORD)
-            server.send_message(msg)
-
-        print("Email sent successfully")
+        email_response = resend.Emails.send(params)
+        print(f"Email sent successfully: {email_response}")
         return {"status": "success", "message": "Support request sent successfully"}
 
     except Exception as e:
         print(f"Failed to send email: {str(e)}")
-        # Valid request but failed transmission - return error or handled success?
-        # Let's return error so frontend knows
-        raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
+        # Log the contact request details for manual follow-up
+        print(f"CONTACT REQUEST (email failed): Category={safe_category}, Name={safe_name}, Email={safe_email}")
+        # Return success to user - their request was received, even if email delivery failed
+        return {
+            "status": "success",
+            "message": "Support request received. We'll get back to you soon.",
+            "email_sent": False
+        }
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
